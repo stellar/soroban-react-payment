@@ -1,11 +1,10 @@
 import * as React from 'react';
 import ReactDOM from 'react-dom/client';
 
-function App() {
-  return (
-    <div></div>
-  );
-}
+import { SendPayment } from 'components/send-payment';
+import "@stellar/design-system/build/styles.min.css";
+import "./index.scss"
+
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
-root.render(<App />);
+root.render(<SendPayment />);
