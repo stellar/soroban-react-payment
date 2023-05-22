@@ -1,15 +1,15 @@
 import freighterApi from "@stellar/freighter-api";
 
 export enum Networks {
-  Futurenet = 'FUTURENET',
+  Futurenet = "FUTURENET",
 }
 
 export async function connectNetwork() {
-  const networkDetails = await freighterApi.getNetworkDetails()
-  const pubKey = await freighterApi.getPublicKey()
+  const networkDetails = await freighterApi.getNetworkDetails();
+  const pubKey = await freighterApi.getPublicKey();
 
   return {
     networkDetails,
-    pubKey
-  }
+    pubKey,
+  };
 }
