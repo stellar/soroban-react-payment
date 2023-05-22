@@ -11,7 +11,7 @@ const devConfig = {
   plugins: [
     new webpack.DefinePlugin({
       DEV_SERVER: true,
-    })
+    }),
   ],
 };
 

@@ -10,7 +10,7 @@ const prodConfig = (env = { PRODUCTION: false, TRANSLATIONS: false }) => ({
   optimization: {
     minimize: env.PRODUCTION,
     splitChunks: {
-      chunks: (chunk) => chunk.name === "index"
+      chunks: (chunk) => chunk.name === "index",
     },
   },
 

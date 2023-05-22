@@ -11,14 +11,14 @@ const BUILD_PATH = path.resolve(__dirname, "../build");
 
 const commonConfig = (env) => ({
   entry: {
-    index: ["babel-polyfill", path.resolve(__dirname, "../src/index.tsx")]
+    index: ["babel-polyfill", path.resolve(__dirname, "../src/index.tsx")],
   },
   watchOptions: {
     ignored: ["node_modules/**/*", "build/**/*"],
   },
   output: {
     path: BUILD_PATH,
-    filename: '[contenthash].js',
+    filename: "[contenthash].js",
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js"],
@@ -116,7 +116,7 @@ const commonConfig = (env) => ({
   ],
   stats: DEFAULT_STATS,
   devServer: {
-    hot: true
+    hot: true,
   },
 });
 
