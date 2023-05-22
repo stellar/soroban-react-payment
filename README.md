@@ -41,35 +41,35 @@ To use the Payment DApp, follow these steps:
 5. Connect your Freighter wallet to the DApp and ensure that experimental mode is enabled. You can find this setting in Freighter wallet at:  _`Settings(⚙️)>Preferences>ENABLE EXPERIMENTAL MODE`_.
 
 
-<img src = "./public/freighter_settings.png" width="50%" height="50%"/>
+<img src = "./public/img/freighter_settings.png" width="50%" height="50%"/>
 
 6. [Enable and add Soroban Tokens](https://soroban.stellar.org/docs/getting-started/connect-freighter-wallet#enable-soroban-tokens) in Freighter.
 
 7. Select the account that will be used to send Soroban tokens.
 
-<img src = "./public/account_selection.png" width="50%" height="50%"/>
+<img src = "./public/img/account_selection.png" width="50%" height="50%"/>
 
 8. Provide the required transaction parameters, such as the token to send,amount of tokens to transfer and the destination address.
 
 
-<img src = "./public/token_select.png" width="50%" height="50%"/>
+<img src = "./public/img/token_select.png" width="50%" height="50%"/>
 <br/>
-<img src = "./public/send_amount.png" width="50%" height="50%"/>
+<img src = "./public/img/send_amount.png" width="50%" height="50%"/>
 <br/>
-<img src = "./public/destination.png" width="50%" height="50%"/>
+<img src = "./public/img/destination.png" width="50%" height="50%"/>
 
 
 9. Review the transaction details to ensure accuracy and then click the "Sign with Freighter" once  . Freighter will prompt you to sign the transaction with your wallet's private key. 
 
-<img src = "./public/confirm.png" width="50%" height="50%"/>
+<img src = "./public/img/confirm.png" width="50%" height="50%"/>
 
 10. Once signed, the click the "Submit payment" button and the transaction will be submitted to the network.
 
-<img src = "./public/submit_tx.png" width="50%" height="50%"/>
+<img src = "./public/img/submit_tx.png" width="50%" height="50%"/>
 
 11. The Payment DApp will show a confirmation message once the transaction has been successfully submitted.
 
-<img src = "./public/tx_success.png" width="50%" height="50%"/>
+<img src = "./public/img/tx_success.png" width="50%" height="50%"/>
 
 ## Build project
 
