@@ -38,7 +38,7 @@ To use the Payment DApp, follow these steps:
     yarn
     ```
 
-5. Connect your Freighter wallet to the DApp and ensure that experimental mode is enabled. You can find this setting in Freighter wallet at:  _`Settings(`⚙️`)`>`Preferences`>`ENABLE EXPERIMENTAL MODE`_.
+5. Connect your Freighter wallet to the DApp and ensure that experimental mode is enabled. You can find this setting in Freighter wallet at:  _`Settings(⚙️)>Preferences>ENABLE EXPERIMENTAL MODE`_.
 
 
 <img src = "./public/freighter_settings.png" width="50%" height="50%"/>
