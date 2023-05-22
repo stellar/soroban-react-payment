@@ -75,7 +75,7 @@
     "eslint-webpack-plugin": "^2.1.0",
     "html-loader": "^4.2.0",
     "html-webpack-plugin": "^5.5.1",
-    "husky": "^8.0.3",
+    "husky": "4",
     "i18next": "^21.8.13",
     "i18next-browser-languagedetector": "^6.1.4",
     "i18next-resources-to-backend": "^1.0.0",
