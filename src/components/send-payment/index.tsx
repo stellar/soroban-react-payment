@@ -1,4 +1,5 @@
 import React from "react";
+import freighterApi from "@stellar/freighter-api";
 import {
   Button,
   Card,
@@ -7,17 +8,17 @@ import {
   Layout,
   Notification,
 } from "@stellar/design-system";
-import { connectNetwork, Networks, ERRORS, truncateString } from "utils";
+import {
+  connectNetwork,
+  Networks,
+  NetworkDetails,
+  ERRORS,
+  truncateString,
+} from "utils";
 import { IdenticonImg } from "components/identicon";
 
 import "./index.scss";
 import { createPortal } from "react-dom";
-
-interface NetworkDetails {
-  network: string;
-  networkUrl: string;
-  networkPassphrase: string;
-}
 
 interface SendPaymentProps {
   showHeader?: boolean;
@@ -48,6 +49,13 @@ function SendPayment(props: SendPaymentProps) {
   async function setConnection() {
     setConnectionError(null);
     setActivePubKey(null);
+
+    const isConnected = await freighterApi.isConnected();
+
+    if (!isConnected) {
+      setConnectionError(ERRORS.FREIGHTER_NOT_AVAILABLE);
+      return;
+    }
 
     const { networkDetails, pubKey } = await connectNetwork();
 

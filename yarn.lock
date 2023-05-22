@@ -1156,10 +1156,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@stellar/design-system@^1.0.0-beta.10":
-  version "1.0.0-beta.10"
-  resolved "https://registry.yarnpkg.com/@stellar/design-system/-/design-system-1.0.0-beta.10.tgz#1c15a985e519117ec636473647a920ea074890a5"
-  integrity sha512-AtLr4leOMgLrGvhHL2xoP6m7rHL1Iw5SpwZHpZM7+mzR+V2Rnf5WR1J7vyNM8Yj1By4le+BF3edgDxLzee6lEA==
+"@stellar/design-system@^1.0.0-beta.11":
+  version "1.0.0-beta.11"
+  resolved "https://registry.yarnpkg.com/@stellar/design-system/-/design-system-1.0.0-beta.11.tgz#a9d585605748c26e79150235a3325c00240cae2f"
+  integrity sha512-xeaEVemDqkR2yYyhNi1F8LlId0zc4SjvDRHKLjawCzy3QDq2O7qTVvrUb/J+akIZWP+2D8alR2bSccEbFtdl5Q==
   dependencies:
     "@floating-ui/dom" "^1.2.5"
     bignumber.js "^9.1.1"
