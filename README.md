@@ -85,5 +85,4 @@ yarn && yarn start
 
 ## Contributions
 
-Contributions to the Payment DApp are welcome. If you encounter any issues, have suggestions for improvements, or would like to contribute to the codebase, please follow the guidelines outlined in the project's repository.
-
+Contributions to the Payment DApp are welcome. If you encounter any issues, have suggestions for improvements, or would like to contribute to the codebase, please submit an issue, pull request, or reach out to us on [Discord](https://discord.com/channels/897514728459468821/1037073682599780494).
