@@ -2,6 +2,27 @@
 
 The Payment DApp is an easy to use application designed to mirror the Soroban payment flow currently found in Freighter. 
 
+## Prerequisites
+
+The Payment DApp relies on the following dependencies:
+- Node (>=16.14.0 <17.0.0): https://nodejs.org/en/download/
+
+- Yarn (v1.22.5 or newer): https://classic.yarnpkg.com/en/docs/install
+
+- Freighter wallet: https://www.freighter.app/
+
+## Build project
+
+```
+yarn && yarn build
+```
+
+## Starting a dev environment
+
+```
+yarn && yarn start
+```
+
 ## Features 
 
 The Payment DApp offers the following features:
@@ -60,27 +81,6 @@ To use the Payment DApp, follow these steps:
 11. The Payment DApp will show a confirmation message once the transaction has been successfully submitted.
 
 <img src = "./public/tx_success.png" width="50%" height="50%"/>
-
-## Prerequisites
-
-The Payment DApp relies on the following dependencies:
-- Node (>=16.14.0 <17.0.0): https://nodejs.org/en/download/
-
-- Yarn (v1.22.5 or newer): https://classic.yarnpkg.com/en/docs/install
-
-- Freighter wallet: https://www.freighter.app/
-
-## Build project
-
-```
-yarn && yarn build
-```
-
-## Starting a dev environment
-
-```
-yarn && yarn start
-```
 
 ## Contributions
 
