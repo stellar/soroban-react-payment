@@ -1,17 +1,17 @@
-import React from "react"
+import React from "react";
 import {
   Button,
   Card,
   Caption,
   Heading,
   Layout,
-  Notification
-} from "@stellar/design-system"
-import { connectNetwork, Networks, ERRORS, truncateString } from "utils"
-import { IdenticonImg } from "components/identicon"
+  Notification,
+} from "@stellar/design-system";
+import { connectNetwork, Networks, ERRORS, truncateString } from "utils";
+import { IdenticonImg } from "components/identicon";
 
-import "./index.scss"
-import { createPortal } from "react-dom"
+import "./index.scss";
+import { createPortal } from "react-dom";
 
 interface NetworkDetails {
   network: string;
@@ -20,15 +20,19 @@ interface NetworkDetails {
 }
 
 interface SendPaymentProps {
-  showHeader?: boolean
+  showHeader?: boolean;
 }
 
 function SendPayment(props: SendPaymentProps) {
-  const showHeader = props.showHeader || true
-  const [activeNetworkDetails, setActiveNetworkDetails] = React.useState({} as NetworkDetails)
-  const [activePubKey, setActivePubKey] = React.useState(null as string | null)
-  const [stepCount, setStepCount] = React.useState(1)
-  const [connectionError, setConnectionError] = React.useState(null as string | null)
+  const showHeader = props.showHeader || true;
+  const [activeNetworkDetails, setActiveNetworkDetails] = React.useState(
+    {} as NetworkDetails,
+  );
+  const [activePubKey, setActivePubKey] = React.useState(null as string | null);
+  const [stepCount, setStepCount] = React.useState(1);
+  const [connectionError, setConnectionError] = React.useState(
+    null as string | null,
+  );
 
   function renderStep(step: number) {
     switch (step) {
@@ -37,22 +41,22 @@ function SendPayment(props: SendPaymentProps) {
         return (
           // add next steps, TBD
           <div />
-        )
+        );
     }
   }
 
   async function setConnection() {
-    setConnectionError(null)
-    setActivePubKey(null)
+    setConnectionError(null);
+    setActivePubKey(null);
 
-    const { networkDetails, pubKey } = await connectNetwork()
+    const { networkDetails, pubKey } = await connectNetwork();
 
     if (networkDetails.network !== Networks.Futurenet) {
-      setConnectionError(ERRORS.UNSUPPORTED_NETWORK)
+      setConnectionError(ERRORS.UNSUPPORTED_NETWORK);
     }
 
-    setActiveNetworkDetails(networkDetails)
-    setActivePubKey(pubKey)
+    setActiveNetworkDetails(networkDetails);
+    setActivePubKey(pubKey);
   }
 
   return (
@@ -83,33 +87,38 @@ function SendPayment(props: SendPaymentProps) {
             </Heading>
             {renderStep(stepCount)}
             <div className="submit-row">
-              {activeNetworkDetails.network
-                ? (
-                  <Button size="md" variant="tertiary" isFullWidth onClick={() => setStepCount(stepCount + 1)}>
-                    Next
-                  </Button>
-                ) : (
-                  <Button size="md" variant="tertiary" isFullWidth onClick={setConnection}>
-                    Connect Freighter
-                  </Button>
-                )}
+              {activeNetworkDetails.network ? (
+                <Button
+                  size="md"
+                  variant="tertiary"
+                  isFullWidth
+                  onClick={() => setStepCount(stepCount + 1)}
+                >
+                  Next
+                </Button>
+              ) : (
+                <Button
+                  size="md"
+                  variant="tertiary"
+                  isFullWidth
+                  onClick={setConnection}
+                >
+                  Connect Freighter
+                </Button>
+              )}
             </div>
           </Card>
         </div>
-        {connectionError !== null && (
+        {connectionError !== null &&
           createPortal(
             <div className="notification-container">
-              <Notification
-                title={connectionError!}
-                variant="error"
-              />
+              <Notification title={connectionError!} variant="error" />
             </div>,
-            document.getElementById("root")!
-          )
-        )}
+            document.getElementById("root")!,
+          )}
       </div>
     </>
-  )
+  );
 }
 
-export { SendPayment }
+export { SendPayment };
