@@ -4,12 +4,20 @@ import {
   Card,
   Caption,
   Heading,
-  Layout
+  Layout,
+  Notification
 } from "@stellar/design-system"
-import { Networks, connectNetwork } from "utils"
-import { SelectNetwork } from "./select-network"
+import { connectNetwork, Networks, ERRORS, truncateString } from "utils"
+import { IdenticonImg } from "components/identicon"
 
 import "./index.scss"
+import { createPortal } from "react-dom"
+
+interface NetworkDetails {
+  network: string;
+  networkUrl: string;
+  networkPassphrase: string;
+}
 
 interface SendPaymentProps {
   showHeader?: boolean
@@ -17,17 +25,34 @@ interface SendPaymentProps {
 
 function SendPayment(props: SendPaymentProps) {
   const showHeader = props.showHeader || true
-  const [activeNetwork] = React.useState(Networks.Futurenet)
-  const [stepCount] = React.useState(1)
+  const [activeNetworkDetails, setActiveNetworkDetails] = React.useState({} as NetworkDetails)
+  const [activePubKey, setActivePubKey] = React.useState(null as string | null)
+  const [stepCount, setStepCount] = React.useState(1)
+  const [connectionError, setConnectionError] = React.useState(null as string | null)
 
   function renderStep(step: number) {
     switch (step) {
       case 1:
       default:
         return (
-          <SelectNetwork selectedNetwork={activeNetwork} />
+          // add next steps, TBD
+          <div />
         )
     }
+  }
+
+  async function setConnection() {
+    setConnectionError(null)
+    setActivePubKey(null)
+
+    const { networkDetails, pubKey } = await connectNetwork()
+
+    if (networkDetails.network !== Networks.Futurenet) {
+      setConnectionError(ERRORS.UNSUPPORTED_NETWORK)
+    }
+
+    setActiveNetworkDetails(networkDetails)
+    setActivePubKey(pubKey)
   }
 
   return (
@@ -35,6 +60,18 @@ function SendPayment(props: SendPaymentProps) {
       {showHeader && (
         <Layout.Header hasThemeSwitch projectId="soroban-react-payment" />
       )}
+      <div className="Layout__inset account-badge-row">
+        {activePubKey !== null && (
+          <div className="account-badge">
+            <div className="Badge Badge--pending">
+              <IdenticonImg publicKey={activePubKey} />
+              <Caption size="xs" addlClassName="badge-pubkey">
+                {truncateString(activePubKey)}
+              </Caption>
+            </div>
+          </div>
+        )}
+      </div>
       <div className="Layout__inset layout">
         <div className="payment">
           <Card variant="primary">
@@ -46,12 +83,30 @@ function SendPayment(props: SendPaymentProps) {
             </Heading>
             {renderStep(stepCount)}
             <div className="submit-row">
-              <Button size="md" variant="tertiary" isFullWidth onClick={connectNetwork}>
-                Connect Freighter
-              </Button>
+              {activeNetworkDetails.network
+                ? (
+                  <Button size="md" variant="tertiary" isFullWidth onClick={() => setStepCount(stepCount + 1)}>
+                    Next
+                  </Button>
+                ) : (
+                  <Button size="md" variant="tertiary" isFullWidth onClick={setConnection}>
+                    Connect Freighter
+                  </Button>
+                )}
             </div>
           </Card>
         </div>
+        {connectionError !== null && (
+          createPortal(
+            <div className="notification-container">
+              <Notification
+                title={connectionError!}
+                variant="error"
+              />
+            </div>,
+            document.getElementById("root")!
+          )
+        )}
       </div>
     </>
   )
