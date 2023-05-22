@@ -2,6 +2,7 @@ import * as React from 'react';
 import ReactDOM from 'react-dom/client';
 
 import { SendPayment } from 'components/send-payment';
+
 import "@stellar/design-system/build/styles.min.css";
 import "./index.scss"
 
