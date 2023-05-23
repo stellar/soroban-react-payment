@@ -10,7 +10,7 @@ export enum Networks {
   Futurenet = "FUTURENET",
 }
 
-export async function connectNetwork() {
+export const connectNetwork = async () => {
   try {
     const networkDetails = await freighterApi.getNetworkDetails();
     const pubKey = await freighterApi.getPublicKey();
@@ -26,4 +26,4 @@ export async function connectNetwork() {
       pubKey: "",
     };
   }
-}
+};

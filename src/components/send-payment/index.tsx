@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import freighterApi from "@stellar/freighter-api";
 import {
   Button,
@@ -8,23 +9,18 @@ import {
   Layout,
   Notification,
 } from "@stellar/design-system";
-import {
-  connectNetwork,
-  Networks,
-  NetworkDetails,
-  ERRORS,
-  truncateString,
-} from "utils";
+import { connectNetwork, Networks, NetworkDetails } from "utils/network";
+import { ERRORS } from "utils/error";
+import { truncateString } from "utils/format";
 import { IdenticonImg } from "components/identicon";
 
 import "./index.scss";
-import { createPortal } from "react-dom";
 
 interface SendPaymentProps {
   showHeader?: boolean;
 }
 
-function SendPayment(props: SendPaymentProps) {
+export const SendPayment = (props: SendPaymentProps) => {
   const showHeader = props.showHeader || true;
   const [activeNetworkDetails, setActiveNetworkDetails] = React.useState(
     {} as NetworkDetails,
@@ -127,6 +123,4 @@ function SendPayment(props: SendPaymentProps) {
       </div>
     </>
   );
-}
-
-export { SendPayment };
+};
