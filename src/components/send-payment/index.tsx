@@ -8,6 +8,7 @@ import { truncateString } from "utils/format";
 import { IdenticonImg } from "components/identicon";
 import { ConnectWallet } from "./connect-wallet";
 import { TokenInput } from "./token-input";
+import { Fee } from "./fee";
 
 import "./index.scss";
 
@@ -27,15 +28,13 @@ export const SendPayment = (props: SendPaymentProps) => {
   const [connectionError, setConnectionError] = React.useState(
     null as string | null,
   );
-
-  // not used yet
-  /* eslint-disable */
-  // @ts-ignore
   const [tokenId, setTokenId] = React.useState(null as string | null);
-  /* eslint-enable */
 
   function renderStep(step: StepCount) {
     switch (step) {
+      case 5: {
+        return <Fee onClick={console.log} tokenId={tokenId!} />;
+      }
       case 3: {
         const onClick = (value: string) => {
           setTokenId(value);
