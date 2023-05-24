@@ -91,7 +91,7 @@ export const SendPayment = (props: SendPaymentProps) => {
             </Heading>
             {renderStep(stepCount)}
             <div className="submit-row">
-              {activeNetworkDetails.network ? (
+              {activeNetworkDetails.network && connectionError === null ? (
                 <Button
                   size="md"
                   variant="tertiary"
