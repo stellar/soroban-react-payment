@@ -1,16 +1,21 @@
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, useEffect } from "react";
 import { Button, Heading, Input } from "@stellar/design-system";
-import { stroopToXlm } from "../../utils/format";
+import { getTokenSymbol, getTxBuilder } from "utils/soroban";
+import { NetworkDetails } from "utils/network";
+import { stroopToXlm, xlmToStroop } from "../../utils/format";
 
 const BASE_FEE = "100";
 const baseFeeXlm = stroopToXlm(BASE_FEE).toString();
 
 interface FeeProps {
   onClick: () => void;
+  pubKey: string;
+  networkDetails: NetworkDetails;
   tokenId: string;
 }
 
 export const Fee = (props: FeeProps) => {
+  const [tokenSymbol, setTokenSymbol] = React.useState("");
   const [fee, setFee] = React.useState(baseFeeXlm);
   const handleFeeChange = (event: ChangeEvent<HTMLInputElement>) => {
     setFee(event.target.value);
@@ -20,7 +25,30 @@ export const Fee = (props: FeeProps) => {
     setMemo(event.target.value);
   };
 
-  console.log(props.tokenId);
+  useEffect(() => {
+    (async () => {
+      const txBuilder = getTxBuilder(
+        props.pubKey,
+        xlmToStroop(fee).toString(),
+        props.networkDetails.networkPassphrase,
+      );
+      const symbol = await getTokenSymbol(
+        props.tokenId,
+        txBuilder,
+        props.networkDetails,
+      );
+      console.log(symbol);
+      setTokenSymbol(symbol);
+    })();
+  }, [
+    props.tokenId,
+    props.pubKey,
+    props.networkDetails.networkPassphrase,
+    props.networkDetails,
+    fee,
+  ]);
+
+  console.log(tokenSymbol);
 
   return (
     <>

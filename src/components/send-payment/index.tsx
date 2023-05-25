@@ -33,7 +33,14 @@ export const SendPayment = (props: SendPaymentProps) => {
   function renderStep(step: StepCount) {
     switch (step) {
       case 5: {
-        return <Fee onClick={console.log} tokenId={tokenId!} />;
+        return (
+          <Fee
+            onClick={console.log}
+            tokenId={tokenId!}
+            networkDetails={activeNetworkDetails}
+            pubKey={activePubKey!}
+          />
+        );
       }
       case 3: {
         const onClick = (value: string) => {

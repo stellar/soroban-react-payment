@@ -1,3 +1,4 @@
+const webpack = require("webpack");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const ESLintPlugin = require("eslint-webpack-plugin");
 const HtmlWebPackPlugin = require("html-webpack-plugin");
@@ -27,6 +28,9 @@ const commonConfig = (env) => ({
         configFile: path.resolve(__dirname, "../tsconfig.json"),
       }),
     ],
+    fallback: {
+      buffer: require.resolve("buffer/"),
+    },
   },
   module: {
     rules: [
@@ -112,6 +116,9 @@ const commonConfig = (env) => ({
     new MiniCssExtractPlugin({
       filename: "style.min.css",
       chunkFilename: "[name].min.css",
+    }),
+    new webpack.ProvidePlugin({
+      Buffer: ["buffer", "Buffer"],
     }),
   ],
   stats: DEFAULT_STATS,
