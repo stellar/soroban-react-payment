@@ -40,6 +40,7 @@ export const simulateTx = async (
   server: SorobanClient.Server,
 ) => {
   const { results } = await server.simulateTransaction(tx);
+  console.log(results);
   if (!results || results.length !== 1) {
     throw new Error("Invalid response from simulateTransaction");
   }
