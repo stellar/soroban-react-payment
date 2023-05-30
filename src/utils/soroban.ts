@@ -5,8 +5,8 @@ export const RPC_URLS: { [key: string]: string } = {
   FUTURENET: "https://rpc-futurenet.stellar.org/",
 };
 
-export const decodeBytesN = (scVal: Buffer) => {
-  const val = SorobanClient.xdr.ScVal.fromXDR(scVal);
+export const decodeBytesN = (scVal: string) => {
+  const val = SorobanClient.xdr.ScVal.fromXDR(scVal, "base64");
   return val.bytes().toString();
 };
 
@@ -36,16 +36,15 @@ export const simulateTx = async (
     SorobanClient.Memo<SorobanClient.MemoType>,
     SorobanClient.Operation[]
   >,
-  decoder: (scVal: Buffer) => string,
+  decoder: (scVal: string) => string,
   server: SorobanClient.Server,
 ) => {
   const { results } = await server.simulateTransaction(tx);
-  console.log(results);
   if (!results || results.length !== 1) {
     throw new Error("Invalid response from simulateTransaction");
   }
   const result = results[0];
-  return decoder(Buffer.from(result.xdr, "base64"));
+  return decoder(result.xdr);
 };
 
 export const getTokenSymbol = async (
