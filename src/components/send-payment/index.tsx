@@ -1,12 +1,14 @@
 import React from "react";
-import { createPortal } from "react-dom";
-import freighterApi from "@stellar/freighter-api";
 import { Card, Caption, Layout, Notification } from "@stellar/design-system";
+import freighterApi from "@stellar/freighter-api";
+
 import { connectNetwork, Networks, NetworkDetails } from "utils/network";
+import { createPortal } from "react-dom";
 import { ERRORS } from "utils/error";
 import { truncateString } from "utils/format";
 import { IdenticonImg } from "components/identicon";
 import { ConnectWallet } from "./connect-wallet";
+import { PaymentDest } from "./payment-destination";
 import { TokenInput } from "./token-input";
 
 import "./index.scss";
@@ -33,9 +35,20 @@ export const SendPayment = (props: SendPaymentProps) => {
   // @ts-ignore
   const [tokenId, setTokenId] = React.useState(null as string | null);
   /* eslint-enable */
+  const [paymentDestination, setPaymentDest] = React.useState("");
 
   function renderStep(step: StepCount) {
     switch (step) {
+      case 2: {
+        const onClick = () => setStepCount((stepCount + 1) as StepCount);
+        return (
+          <PaymentDest
+            onClick={onClick}
+            setDestination={setPaymentDest}
+            destination={paymentDestination}
+          />
+        );
+      }
       case 3: {
         const onClick = (value: string) => {
           setTokenId(value);
