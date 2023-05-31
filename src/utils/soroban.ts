@@ -1,6 +1,7 @@
 import * as SorobanClient from "soroban-client";
 import { NetworkDetails } from "./network";
 import { stroopToXlm } from "./format";
+import { I128 } from "./xdr";
 
 // TODO: once soroban supports estimated fees, we can fetch this
 export const BASE_FEE = "100";
@@ -20,7 +21,12 @@ export const decodeBytesN = (xdr: string) => {
 
 export const decodei128 = (xdr: string) => {
   const value = SorobanClient.xdr.ScVal.fromXDR(xdr, "base64");
-  return SorobanClient.xdr.ScVal.scvI128(value.i128()).toString();
+  return new I128([
+    BigInt(value.i128().lo().low),
+    BigInt(value.i128().lo().high),
+    BigInt(value.i128().hi().low),
+    BigInt(value.i128().hi().high),
+  ]).toString();
 };
 
 export const decoders = {

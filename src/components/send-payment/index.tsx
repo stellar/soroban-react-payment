@@ -81,13 +81,14 @@ export const SendPayment = (props: SendPaymentProps) => {
             amount={sendAmount}
             setAmount={setSendAmount}
             onClick={onClick}
-            balance={`${tokenBalance} ${tokenSymbol}`}
+            balance={tokenBalance}
+            tokenSymbol={tokenSymbol}
           />
         );
       }
       case 3: {
-        const onClick = (value: string) => {
-          setToken(value);
+        const onClick = async (value: string) => {
+          await setToken(value);
           setStepCount((stepCount + 1) as StepCount);
         };
         return <TokenInput onClick={onClick} />;
