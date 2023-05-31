@@ -5,9 +5,16 @@ import { Card, Caption, Layout, Notification } from "@stellar/design-system";
 import { connectNetwork, Networks, NetworkDetails } from "utils/network";
 import { ERRORS } from "utils/error";
 import { truncateString } from "utils/format";
+import {
+  getTxBuilder,
+  BASE_FEE,
+  getTokenSymbol,
+  getTokenBalance,
+} from "utils/soroban";
 import { IdenticonImg } from "components/identicon";
 import { ConnectWallet } from "./connect-wallet";
 import { TokenInput } from "./token-input";
+import { SendAmount } from "./send-amount";
 
 import "./index.scss";
 
@@ -28,17 +35,59 @@ export const SendPayment = (props: SendPaymentProps) => {
     null as string | null,
   );
 
-  // not used yet
-  /* eslint-disable */
   // @ts-ignore
-  const [tokenId, setTokenId] = React.useState(null as string | null);
-  /* eslint-enable */
+  // eslint-disable-next-line
+  const [tokenId, setTokenId] = React.useState("");
+  const [sendAmount, setSendAmount] = React.useState("");
+  const [tokenSymbol, setTokenSymbol] = React.useState("");
+  const [tokenBalance, setTokenBalance] = React.useState("");
+
+  async function setToken(id: string) {
+    setTokenId(id);
+
+    const txBuilderSymbol = getTxBuilder(
+      activePubKey!,
+      BASE_FEE,
+      activeNetworkDetails.networkPassphrase,
+    );
+
+    const symbol = await getTokenSymbol(
+      id,
+      txBuilderSymbol,
+      activeNetworkDetails,
+    );
+    setTokenSymbol(symbol);
+
+    const txBuilderBalance = getTxBuilder(
+      activePubKey!,
+      BASE_FEE,
+      activeNetworkDetails.networkPassphrase,
+    );
+    const balance = await getTokenBalance(
+      activePubKey!,
+      id,
+      txBuilderBalance,
+      activeNetworkDetails,
+    );
+    setTokenBalance(balance);
+  }
 
   function renderStep(step: StepCount) {
     switch (step) {
+      case 4: {
+        const onClick = () => setStepCount((stepCount + 1) as StepCount);
+        return (
+          <SendAmount
+            amount={sendAmount}
+            setAmount={setSendAmount}
+            onClick={onClick}
+            balance={`${tokenBalance} ${tokenSymbol}`}
+          />
+        );
+      }
       case 3: {
         const onClick = (value: string) => {
-          setTokenId(value);
+          setToken(value);
           setStepCount((stepCount + 1) as StepCount);
         };
         return <TokenInput onClick={onClick} />;
