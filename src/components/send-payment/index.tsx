@@ -5,11 +5,19 @@ import freighterApi from "@stellar/freighter-api";
 import { connectNetwork, Networks, NetworkDetails } from "utils/network";
 import { createPortal } from "react-dom";
 import { ERRORS } from "utils/error";
+import {
+  getTxBuilder,
+  BASE_FEE,
+  getTokenSymbol,
+  getTokenBalance,
+} from "utils/soroban";
 import { truncateString } from "utils/format";
 import { IdenticonImg } from "components/identicon";
+import { SendAmount } from "./send-amount";
 import { ConnectWallet } from "./connect-wallet";
 import { PaymentDest } from "./payment-destination";
 import { TokenInput } from "./token-input";
+import { Fee } from "./fee";
 
 import "./index.scss";
 
@@ -30,15 +38,79 @@ export const SendPayment = (props: SendPaymentProps) => {
     null as string | null,
   );
 
-  // not used yet
-  /* eslint-disable */
   // @ts-ignore
-  const [tokenId, setTokenId] = React.useState(null as string | null);
-  /* eslint-enable */
+  // eslint-disable-next-line
+  const [tokenId, setTokenId] = React.useState("");
   const [paymentDestination, setPaymentDest] = React.useState("");
+  const [sendAmount, setSendAmount] = React.useState("");
+  const [tokenSymbol, setTokenSymbol] = React.useState("");
+  const [tokenBalance, setTokenBalance] = React.useState("");
+  const [fee, setFee] = React.useState(BASE_FEE);
+  const [memo, setMemo] = React.useState("");
+
+  async function setToken(id: string) {
+    setTokenId(id);
+
+    const txBuilderSymbol = getTxBuilder(
+      activePubKey!,
+      BASE_FEE,
+      activeNetworkDetails.networkPassphrase,
+    );
+
+    const symbol = await getTokenSymbol(
+      id,
+      txBuilderSymbol,
+      activeNetworkDetails,
+    );
+    setTokenSymbol(symbol);
+
+    const txBuilderBalance = getTxBuilder(
+      activePubKey!,
+      BASE_FEE,
+      activeNetworkDetails.networkPassphrase,
+    );
+    const balance = await getTokenBalance(
+      activePubKey!,
+      id,
+      txBuilderBalance,
+      activeNetworkDetails,
+    );
+    setTokenBalance(balance);
+  }
 
   function renderStep(step: StepCount) {
     switch (step) {
+      case 4: {
+        const onClick = () => setStepCount((stepCount + 1) as StepCount);
+        return (
+          <SendAmount
+            amount={sendAmount}
+            setAmount={setSendAmount}
+            onClick={onClick}
+            balance={tokenBalance}
+            tokenSymbol={tokenSymbol}
+          />
+        );
+      }
+      case 5: {
+        const onClick = () => setStepCount((stepCount + 1) as StepCount);
+        return (
+          <Fee
+            fee={fee}
+            memo={memo}
+            onClick={onClick}
+            setFee={setFee}
+            setMemo={setMemo}
+          />
+        );
+      }
+      case 3: {
+        const onClick = async (value: string) => {
+          await setToken(value);
+          setStepCount((stepCount + 1) as StepCount);
+        };
+        return <TokenInput onClick={onClick} />;
+      }
       case 2: {
         const onClick = () => setStepCount((stepCount + 1) as StepCount);
         return (
@@ -48,13 +120,6 @@ export const SendPayment = (props: SendPaymentProps) => {
             destination={paymentDestination}
           />
         );
-      }
-      case 3: {
-        const onClick = (value: string) => {
-          setTokenId(value);
-          setStepCount((stepCount + 1) as StepCount);
-        };
-        return <TokenInput onClick={onClick} />;
       }
       case 1:
       default: {
