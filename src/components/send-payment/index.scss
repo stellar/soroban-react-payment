@@ -34,6 +34,45 @@
     .step-count {
       color: var(--color-gray-60);
     }
+
+    .title {
+      margin-bottom: 0;
+    }
+
+    .balance {
+      margin-top: 0;
+      color: var(--color-gray-60);
+    }
+
+    .tx-details {
+      display: flex;
+      flex-direction: column;
+
+      .tx-detail-item {
+        display: flex;
+        justify-content: space-between;
+
+        .detail-header {
+          color: var(--color-gray-60);
+        }
+
+        .dest-identicon {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+
+          .identicon {
+            width: 20px;
+            height: 20px;
+            margin-left: 8px;
+          }
+        }
+
+        p {
+          margin-bottom: 0.025rem;
+        }
+      }
+    }
   }
 
   .submit-row {
@@ -42,5 +81,17 @@
 
   .submit-row-fee {
     margin-top: 2rem;
+  }
+
+  .submit-row-fee {
+    margin-top: 2rem;
+  }
+
+  .submit-row-destination {
+    margin-top: 2rem;
+  }
+
+  .submit-row-confirm {
+    margin-top: 1rem;
   }
 }
