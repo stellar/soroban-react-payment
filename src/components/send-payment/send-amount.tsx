@@ -6,6 +6,7 @@ import { formatTokenAmount } from "utils/format";
 interface SendAmountProps {
   amount: string;
   balance: string;
+  decimals: number;
   onClick: () => void;
   setAmount: (amount: string) => void;
   tokenSymbol: string;
@@ -25,7 +26,8 @@ export const SendAmount = (props: SendAmountProps) => {
         Available Balance
       </Heading>
       <Heading size="sm" as="h2" addlClassName="balance">
-        {formatTokenAmount(new BigNumber(props.balance), 7)} {props.tokenSymbol}
+        {formatTokenAmount(new BigNumber(props.balance), props.decimals)}{" "}
+        {props.tokenSymbol}
       </Heading>
       <Input
         fieldSize="md"

@@ -5,7 +5,6 @@ import { XdrWriter } from "./serialization/xdr-writer";
 import { XdrNotImplementedDefinitionError } from "./errors";
 
 /* eslint-disable */
-
 /* tslint:disable */
 class XdrType {
   write: any;

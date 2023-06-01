@@ -7,6 +7,7 @@ import { I128 } from "./xdr";
 // TODO: once soroban supports estimated fees, we can fetch this
 export const BASE_FEE = "100";
 export const baseFeeXlm = stroopToXlm(BASE_FEE).toString();
+export const XLM_DECIMALS = 7;
 
 export const RPC_URLS: { [key: string]: string } = {
   FUTURENET: "https://rpc-futurenet.stellar.org/",
@@ -35,9 +36,15 @@ export const decodei128 = (xdr: string) => {
   }
 };
 
+export const decodeu32 = (xdr: string) => {
+  const val = SorobanClient.xdr.ScVal.fromXDR(xdr, "base64");
+  return val.u32();
+};
+
 export const decoders = {
   bytesN: decodeBytesN,
   i128: decodei128,
+  u32: decodeu32,
 };
 
 const bigintToBuf = (bn: bigint): Buffer => {
@@ -170,12 +177,12 @@ export const getTxBuilder = (
   });
 };
 
-export const simulateTx = async (
+export const simulateTx = async <ArgType>(
   tx: SorobanClient.Transaction<
     SorobanClient.Memo<SorobanClient.MemoType>,
     SorobanClient.Operation[]
   >,
-  decoder: (xdr: string) => string,
+  decoder: (xdr: string) => ArgType,
   server: SorobanClient.Server,
 ) => {
   const { results } = await server.simulateTransaction(tx);
@@ -198,7 +205,7 @@ export const getTokenSymbol = async (
     .setTimeout(SorobanClient.TimeoutInfinite)
     .build();
 
-  const result = await simulateTx(tx, decoders.bytesN, server);
+  const result = await simulateTx<string>(tx, decoders.bytesN, server);
   return result;
 };
 
@@ -215,6 +222,22 @@ export const getTokenName = async (
     .build();
 
   const result = await simulateTx(tx, decoders.bytesN, server);
+  return result;
+};
+
+export const getTokenDecimals = async (
+  tokenId: string,
+  txBuilder: SorobanClient.TransactionBuilder,
+  networkDetails: NetworkDetails,
+) => {
+  const server = getServer(networkDetails);
+  const contract = new SorobanClient.Contract(tokenId);
+  const tx = txBuilder
+    .addOperation(contract.call("decimals"))
+    .setTimeout(SorobanClient.TimeoutInfinite)
+    .build();
+
+  const result = await simulateTx<number>(tx, decoders.u32, server);
   return result;
 };
 
@@ -238,7 +261,7 @@ export const getTokenBalance = async (
 
 export const makePayment = async (
   tokenId: string,
-  amount: string,
+  amount: number,
   to: string,
   pubKey: string,
   txBuilder: SorobanClient.TransactionBuilder,
@@ -246,7 +269,6 @@ export const makePayment = async (
 ) => {
   const server = getServer(networkDetails);
   const contract = new SorobanClient.Contract(tokenId);
-  const tokenAmount = parseTokenAmount(amount, 7);
   const tx = txBuilder
     .addOperation(
       contract.call(
@@ -254,7 +276,7 @@ export const makePayment = async (
         ...[
           accountToScVal(pubKey), // from
           accountToScVal(to), // to
-          numberToI128(tokenAmount.toNumber()), // amount
+          numberToI128(amount), // amount
         ],
       ),
     )

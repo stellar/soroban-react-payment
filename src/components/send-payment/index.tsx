@@ -5,13 +5,15 @@ import freighterApi from "@stellar/freighter-api";
 import { connectNetwork, Networks, NetworkDetails } from "utils/network";
 import { createPortal } from "react-dom";
 import { ERRORS } from "utils/error";
-import { truncateString } from "utils/format";
 import {
   getTxBuilder,
   BASE_FEE,
+  XLM_DECIMALS,
   getTokenSymbol,
   getTokenBalance,
+  getTokenDecimals,
 } from "utils/soroban";
+import { truncateString } from "utils/format";
 import { IdenticonImg } from "components/identicon";
 import { SendAmount } from "./send-amount";
 import { ConnectWallet } from "./connect-wallet";
@@ -51,6 +53,10 @@ export const SendPayment = (props: SendPaymentProps) => {
   // eslint-disable-next-line
   const [signedXdr, setSignedXdr] = React.useState("");
 
+  // @ts-ignore
+  // eslint-disable-next-line
+  const [tokenDecimals, setTokenDecimals] = React.useState(XLM_DECIMALS);
+
   async function setToken(id: string) {
     setTokenId(id);
 
@@ -79,6 +85,18 @@ export const SendPayment = (props: SendPaymentProps) => {
       activeNetworkDetails,
     );
     setTokenBalance(balance);
+
+    const txBuilderDecimals = getTxBuilder(
+      activePubKey!,
+      BASE_FEE,
+      activeNetworkDetails.networkPassphrase,
+    );
+    const decimals = await getTokenDecimals(
+      id,
+      txBuilderDecimals,
+      activeNetworkDetails,
+    );
+    setTokenDecimals(decimals);
   }
 
   function renderStep(step: StepCount) {
@@ -91,12 +109,13 @@ export const SendPayment = (props: SendPaymentProps) => {
         return (
           <ConfirmPayment
             tokenId={tokenId}
+            tokenDecimals={tokenDecimals}
             pubKey={activePubKey!}
             tokenSymbol={tokenSymbol}
             onTxSign={setSignedTx}
             network={activeNetworkDetails.network}
             destination={paymentDestination}
-            amount="5"
+            amount={sendAmount}
             fee={fee}
             memo={memo}
             networkDetails={activeNetworkDetails}
@@ -120,6 +139,7 @@ export const SendPayment = (props: SendPaymentProps) => {
         return (
           <SendAmount
             amount={sendAmount}
+            decimals={tokenDecimals}
             setAmount={setSendAmount}
             onClick={onClick}
             balance={tokenBalance}
