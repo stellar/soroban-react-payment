@@ -5,13 +5,14 @@ export class XdrWriter {
   private _length: any;
 
   constructor(buffer: any) {
-    if (typeof buffer === "number") {
-      buffer = Buffer.allocUnsafe(buffer);
+    let _buffer = buffer;
+    if (typeof _buffer === "number") {
+      _buffer = Buffer.allocUnsafe(_buffer);
     } else if (!(buffer instanceof Buffer)) {
-      buffer = Buffer.allocUnsafe(BUFFER_CHUNK);
+      _buffer = Buffer.allocUnsafe(BUFFER_CHUNK);
     }
-    this._buffer = buffer;
-    this._length = buffer.length;
+    this._buffer = _buffer;
+    this._length = _buffer.length;
   }
 
   _index = 0;
@@ -48,17 +49,18 @@ export class XdrWriter {
   }
 
   write(value: any, size: number) {
+    let _value = value;
     if (typeof value === "string") {
       // serialize string directly to the output buffer
       const offset = this.alloc(size);
-      this._buffer.write(value, offset, "utf8");
+      this._buffer.write(_value, offset, "utf8");
     } else {
       // copy data to the output buffer
-      if (!(value instanceof Buffer)) {
-        value = Buffer.from(value);
+      if (!(_value instanceof Buffer)) {
+        _value = Buffer.from(_value);
       }
       const offset = this.alloc(size);
-      value.copy(this._buffer, offset, 0, size);
+      _value.copy(this._buffer, offset, 0, size);
     }
 
     // add padding for 4-byte XDR alignment

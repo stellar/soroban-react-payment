@@ -4,19 +4,19 @@ import { NetworkDetails } from "./network";
 import { stroopToXlm } from "./format";
 import { I128 } from "./xdr";
 
-export const RPC_URLS: { [key: string]: string } = {
-  FUTURENET: "https://rpc-futurenet.stellar.org/",
-};
-
 // TODO: once soroban supports estimated fees, we can fetch this
 export const BASE_FEE = "100";
 export const baseFeeXlm = stroopToXlm(BASE_FEE).toString();
 
+export const RPC_URLS: { [key: string]: string } = {
+  FUTURENET: "https://rpc-futurenet.stellar.org/",
+};
+
 export const accountToScVal = (account: string) =>
   new SorobanClient.Address(account).toScVal();
 
-export const decodeBytesN = (scVal: string) => {
-  const val = SorobanClient.xdr.ScVal.fromXDR(scVal, "base64");
+export const decodeBytesN = (xdr: string) => {
+  const val = SorobanClient.xdr.ScVal.fromXDR(xdr, "base64");
   return val.bytes().toString();
 };
 
@@ -175,7 +175,7 @@ export const simulateTx = async (
     SorobanClient.Memo<SorobanClient.MemoType>,
     SorobanClient.Operation[]
   >,
-  decoder: (scVal: string) => string,
+  decoder: (xdr: string) => string,
   server: SorobanClient.Server,
 ) => {
   const { results } = await server.simulateTransaction(tx);

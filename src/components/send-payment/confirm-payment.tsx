@@ -12,14 +12,13 @@ interface ConfirmPaymentProps {
   pubKey: string;
   memo: string;
   network: string;
-  onClick: () => void;
+  onTxSign: (xdr: string) => void;
   tokenId: string;
   tokenSymbol: string;
   networkDetails: NetworkDetails;
 }
 
 export const ConfirmPayment = (props: ConfirmPaymentProps) => {
-  console.log(props.onClick);
   const signWithFreighter = async () => {
     const builder = getTxBuilder(
       props.pubKey,
@@ -39,7 +38,8 @@ export const ConfirmPayment = (props: ConfirmPaymentProps) => {
       networkPassphrase: props.networkDetails.networkPassphrase,
       accountToSign: props.pubKey,
     };
-    await signTx(xdr, options);
+    const signedTx = await signTx(xdr, options);
+    props.onTxSign(signedTx);
   };
   return (
     <>

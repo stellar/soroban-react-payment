@@ -6,16 +6,17 @@ export class XdrReader {
   private _index: number;
 
   constructor(source: any) {
-    if (!Buffer.isBuffer(source)) {
-      if (source instanceof Array) {
-        source = Buffer.from(source);
+    let _source = source;
+    if (!Buffer.isBuffer(_source)) {
+      if (_source instanceof Array) {
+        _source = Buffer.from(source);
       } else {
         throw new XdrReaderError("source not specified");
       }
     }
 
-    this._buffer = source;
-    this._length = source.length;
+    this._buffer = _source;
+    this._length = _source.length;
     this._index = 0;
   }
 
@@ -35,7 +36,7 @@ export class XdrReader {
     // check that padding is correct for Opaque and String
     const padding = 4 - (size % 4 || 4);
     if (padding > 0) {
-      // eslint-disable-next-line
+      // eslint-disable-next-line no-plusplus
       for (let i = 0; i < padding; i++)
         if (this._buffer[this._index + i] !== 0)
           // all bytes in the padding should be zeros
