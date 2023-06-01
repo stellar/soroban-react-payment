@@ -3,8 +3,7 @@ module.exports = {
   env: {
     es2020: true,
   },
-  globals: {
-  },
+  globals: {},
   ignorePatterns: ["dist/", "node_modules/", "build/", "__mocks__/"],
   overrides: [
     {
@@ -22,6 +21,7 @@ module.exports = {
     "no-console": "off",
     "react/jsx-filename-extension": ["error", { extensions: [".tsx", ".jsx"] }],
     "jsdoc/newline-after-description": "off",
+    "max-classes-per-file": "off",
   },
   settings: {
     "import/resolver": {

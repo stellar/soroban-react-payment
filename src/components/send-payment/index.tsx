@@ -4,9 +4,15 @@ import freighterApi from "@stellar/freighter-api";
 import { Card, Caption, Layout, Notification } from "@stellar/design-system";
 import { connectNetwork, Networks, NetworkDetails } from "utils/network";
 import { ERRORS } from "utils/error";
-import { stroopToXlm, truncateString, xlmToStroop } from "utils/format";
-import { getTokenSymbol, getTxBuilder } from "utils/soroban";
+import {
+  getTxBuilder,
+  BASE_FEE,
+  getTokenSymbol,
+  getTokenBalance,
+} from "utils/soroban";
+import { truncateString } from "utils/format";
 import { IdenticonImg } from "components/identicon";
+import { SendAmount } from "./send-amount";
 import { ConnectWallet } from "./connect-wallet";
 import { TokenInput } from "./token-input";
 import { Fee } from "./fee";
@@ -14,10 +20,6 @@ import { Fee } from "./fee";
 import "./index.scss";
 
 type StepCount = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-
-// TODO: once soroban supports estimated fees, we can fetch this
-const BASE_FEE = "100";
-const baseFeeXlm = stroopToXlm(BASE_FEE).toString();
 
 interface SendPaymentProps {
   showHeader?: boolean;
@@ -34,31 +36,59 @@ export const SendPayment = (props: SendPaymentProps) => {
     null as string | null,
   );
 
-  // not used yet
   // @ts-ignore
   // eslint-disable-next-line
-  const [tokenId, setTokenId] = React.useState(null as string | null);
-  // @ts-ignore
-  // eslint-disable-next-line
+  const [tokenId, setTokenId] = React.useState("");
+  const [sendAmount, setSendAmount] = React.useState("");
   const [tokenSymbol, setTokenSymbol] = React.useState("");
-  const [fee, setFee] = React.useState(baseFeeXlm);
+  const [tokenBalance, setTokenBalance] = React.useState("");
+  const [fee, setFee] = React.useState(BASE_FEE);
   const [memo, setMemo] = React.useState("");
 
   async function setToken(id: string) {
     setTokenId(id);
 
-    const txBuilder = getTxBuilder(
+    const txBuilderSymbol = getTxBuilder(
       activePubKey!,
-      xlmToStroop(fee).toString(),
+      BASE_FEE,
       activeNetworkDetails.networkPassphrase,
     );
 
-    const symbol = await getTokenSymbol(id, txBuilder, activeNetworkDetails);
+    const symbol = await getTokenSymbol(
+      id,
+      txBuilderSymbol,
+      activeNetworkDetails,
+    );
     setTokenSymbol(symbol);
+
+    const txBuilderBalance = getTxBuilder(
+      activePubKey!,
+      BASE_FEE,
+      activeNetworkDetails.networkPassphrase,
+    );
+    const balance = await getTokenBalance(
+      activePubKey!,
+      id,
+      txBuilderBalance,
+      activeNetworkDetails,
+    );
+    setTokenBalance(balance);
   }
 
   function renderStep(step: StepCount) {
     switch (step) {
+      case 4: {
+        const onClick = () => setStepCount((stepCount + 1) as StepCount);
+        return (
+          <SendAmount
+            amount={sendAmount}
+            setAmount={setSendAmount}
+            onClick={onClick}
+            balance={tokenBalance}
+            tokenSymbol={tokenSymbol}
+          />
+        );
+      }
       case 5: {
         const onClick = () => setStepCount((stepCount + 1) as StepCount);
         return (
@@ -72,8 +102,8 @@ export const SendPayment = (props: SendPaymentProps) => {
         );
       }
       case 3: {
-        const onClick = (value: string) => {
-          setToken(value);
+        const onClick = async (value: string) => {
+          await setToken(value);
           setStepCount((stepCount + 1) as StepCount);
         };
         return <TokenInput onClick={onClick} />;
