@@ -4,17 +4,18 @@ import freighterApi from "@stellar/freighter-api";
 import { Card, Caption, Layout, Notification } from "@stellar/design-system";
 import { connectNetwork, Networks, NetworkDetails } from "utils/network";
 import { ERRORS } from "utils/error";
-import { truncateString } from "utils/format";
 import {
   getTxBuilder,
   BASE_FEE,
   getTokenSymbol,
   getTokenBalance,
 } from "utils/soroban";
+import { truncateString } from "utils/format";
 import { IdenticonImg } from "components/identicon";
+import { SendAmount } from "./send-amount";
 import { ConnectWallet } from "./connect-wallet";
 import { TokenInput } from "./token-input";
-import { SendAmount } from "./send-amount";
+import { Fee } from "./fee";
 
 import "./index.scss";
 
@@ -41,6 +42,8 @@ export const SendPayment = (props: SendPaymentProps) => {
   const [sendAmount, setSendAmount] = React.useState("");
   const [tokenSymbol, setTokenSymbol] = React.useState("");
   const [tokenBalance, setTokenBalance] = React.useState("");
+  const [fee, setFee] = React.useState(BASE_FEE);
+  const [memo, setMemo] = React.useState("");
 
   async function setToken(id: string) {
     setTokenId(id);
@@ -83,6 +86,18 @@ export const SendPayment = (props: SendPaymentProps) => {
             onClick={onClick}
             balance={tokenBalance}
             tokenSymbol={tokenSymbol}
+          />
+        );
+      }
+      case 5: {
+        const onClick = () => setStepCount((stepCount + 1) as StepCount);
+        return (
+          <Fee
+            fee={fee}
+            memo={memo}
+            onClick={onClick}
+            setFee={setFee}
+            setMemo={setMemo}
           />
         );
       }
