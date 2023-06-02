@@ -18,8 +18,8 @@ import {
   getTokenSymbol,
   getTokenDecimals,
   getTokenBalance,
+  getServer,
   submitTx,
-  // getServer
 } from "helpers/soroban";
 
 import { SendAmount } from "./send-amount";
@@ -64,43 +64,40 @@ export const SendPayment = (props: SendPaymentProps) => {
   async function setToken(id: string) {
     setTokenId(id);
 
+    const server = getServer(activeNetworkDetails);
+
     try {
       const txBuilderSymbol = await getTxBuilder(
         activePubKey!,
         BASE_FEE,
-        activeNetworkDetails,
+        server,
+        activeNetworkDetails.networkPassphrase,
       );
 
-      const symbol = await getTokenSymbol(
-        id,
-        txBuilderSymbol,
-        activeNetworkDetails,
-      );
+      const symbol = await getTokenSymbol(id, txBuilderSymbol, server);
       setTokenSymbol(symbol);
 
       const txBuilderBalance = await getTxBuilder(
         activePubKey!,
         BASE_FEE,
-        activeNetworkDetails,
+        server,
+        activeNetworkDetails.networkPassphrase,
       );
       const balance = await getTokenBalance(
         activePubKey!,
         id,
         txBuilderBalance,
-        activeNetworkDetails,
+        server,
       );
       setTokenBalance(balance);
 
       const txBuilderDecimals = await getTxBuilder(
         activePubKey!,
         BASE_FEE,
-        activeNetworkDetails,
+        server,
+        activeNetworkDetails.networkPassphrase,
       );
-      const decimals = await getTokenDecimals(
-        id,
-        txBuilderDecimals,
-        activeNetworkDetails,
-      );
+      const decimals = await getTokenDecimals(id, txBuilderDecimals, server);
       setTokenDecimals(decimals);
 
       return true;
@@ -120,7 +117,12 @@ export const SendPayment = (props: SendPaymentProps) => {
       case 7: {
         const submit = async () => {
           try {
-            const result = await submitTx(signedXdr, activeNetworkDetails);
+            const server = getServer(activeNetworkDetails);
+            const result = await submitTx(
+              signedXdr,
+              activeNetworkDetails.networkPassphrase,
+              server,
+            );
 
             settxResultXDR(result);
             setStepCount((stepCount + 1) as StepCount);
@@ -244,10 +246,6 @@ export const SendPayment = (props: SendPaymentProps) => {
 
     setActiveNetworkDetails(networkDetails);
     setActivePubKey(pubKey);
-
-    // const testServer = getServer(networkDetails)
-    // const testTx = await testServer.getTransaction("dafb7e94340bccf4de95a728022c0c1ab5cd9a5d362bc3109d60047d0f2800ea")
-    // console.log(testTx)
   }
 
   return (

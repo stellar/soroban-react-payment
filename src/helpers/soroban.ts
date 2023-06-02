@@ -174,13 +174,13 @@ export const getServer = (networkDetails: NetworkDetails) =>
 export const getTxBuilder = async (
   pubKey: string,
   fee: string,
-  networkDetails: NetworkDetails,
+  server: SorobanClient.Server,
+  networkPassphrase: string,
 ) => {
-  const server = getServer(networkDetails);
   const source = await server.getAccount(pubKey);
   return new SorobanClient.TransactionBuilder(source, {
     fee,
-    networkPassphrase: networkDetails.networkPassphrase,
+    networkPassphrase,
   });
 };
 
@@ -202,14 +202,14 @@ export const simulateTx = async <ArgType>(
 
 export const submitTx = async (
   signedXDR: string,
-  networkDetails: NetworkDetails,
+  networkPassphrase: string,
+  server: SorobanClient.Server,
 ) => {
   const tx = SorobanClient.TransactionBuilder.fromXDR(
     signedXDR,
-    networkDetails.networkPassphrase,
+    networkPassphrase,
   );
 
-  const server = getServer(networkDetails);
   const sendResponse = await server.sendTransaction(tx);
 
   if (sendResponse.errorResultXdr) {
@@ -219,8 +219,7 @@ export const submitTx = async (
   if (sendResponse.status === "PENDING") {
     let txResponse = await server.getTransaction(sendResponse.hash);
 
-    // Poll this until the status is not "pending"
-    // can't import this type for some reason https://github.com/stellar/js-soroban-client/blob/b90029166e570cd27a37e89a20f7c814f4497466/src/soroban_rpc.ts
+    // Poll this until the status is not "NOT_FOUND"
     while (txResponse.status === "NOT_FOUND") {
       // See if the transaction is complete
       // eslint-disable-next-line no-await-in-loop
@@ -233,16 +232,17 @@ export const submitTx = async (
     return txResponse.resultXdr!;
     // eslint-disable-next-line no-else-return
   } else {
-    throw new Error(sendResponse.status);
+    throw new Error(
+      `Unabled to submit transaction, status: ${sendResponse.status}`,
+    );
   }
 };
 
 export const getTokenSymbol = async (
   tokenId: string,
   txBuilder: SorobanClient.TransactionBuilder,
-  networkDetails: NetworkDetails,
+  server: SorobanClient.Server,
 ) => {
-  const server = getServer(networkDetails);
   const contract = new SorobanClient.Contract(tokenId);
   const tx = txBuilder
     .addOperation(contract.call("symbol"))
@@ -256,9 +256,8 @@ export const getTokenSymbol = async (
 export const getTokenName = async (
   tokenId: string,
   txBuilder: SorobanClient.TransactionBuilder,
-  networkDetails: NetworkDetails,
+  server: SorobanClient.Server,
 ) => {
-  const server = getServer(networkDetails);
   const contract = new SorobanClient.Contract(tokenId);
   const tx = txBuilder
     .addOperation(contract.call("name"))
@@ -272,9 +271,8 @@ export const getTokenName = async (
 export const getTokenDecimals = async (
   tokenId: string,
   txBuilder: SorobanClient.TransactionBuilder,
-  networkDetails: NetworkDetails,
+  server: SorobanClient.Server,
 ) => {
-  const server = getServer(networkDetails);
   const contract = new SorobanClient.Contract(tokenId);
   const tx = txBuilder
     .addOperation(contract.call("decimals"))
@@ -289,10 +287,9 @@ export const getTokenBalance = async (
   address: string,
   tokenId: string,
   txBuilder: SorobanClient.TransactionBuilder,
-  networkDetails: NetworkDetails,
+  server: SorobanClient.Server,
 ) => {
   const params = [accountToScVal(address)];
-  const server = getServer(networkDetails);
   const contract = new SorobanClient.Contract(tokenId);
   const tx = txBuilder
     .addOperation(contract.call("balance", ...params))
@@ -309,9 +306,9 @@ export const makePayment = async (
   to: string,
   pubKey: string,
   txBuilder: SorobanClient.TransactionBuilder,
-  networkDetails: NetworkDetails,
+  server: SorobanClient.Server,
+  networkPassphrase: string,
 ) => {
-  const server = getServer(networkDetails);
   const contract = new SorobanClient.Contract(tokenId);
   const tx = txBuilder
     .addOperation(
@@ -329,7 +326,7 @@ export const makePayment = async (
 
   const preparedTransaction = await server.prepareTransaction(
     tx,
-    networkDetails.networkPassphrase,
+    networkPassphrase,
   );
 
   return preparedTransaction.toXDR();

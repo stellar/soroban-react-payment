@@ -2,7 +2,12 @@ import React from "react";
 import { Button, Heading } from "@stellar/design-system";
 import { truncateString } from "helpers/format";
 import { NetworkDetails, signTx } from "helpers/network";
-import { makePayment, getTxBuilder, parseTokenAmount } from "helpers/soroban";
+import {
+  makePayment,
+  getTxBuilder,
+  parseTokenAmount,
+  getServer,
+} from "helpers/soroban";
 import { IdenticonImg } from "components/identicon";
 
 interface ConfirmPaymentProps {
@@ -22,10 +27,12 @@ interface ConfirmPaymentProps {
 export const ConfirmPayment = (props: ConfirmPaymentProps) => {
   const signWithFreighter = async () => {
     const amount = parseTokenAmount(props.amount, props.tokenDecimals);
+    const server = getServer(props.networkDetails);
     const builder = await getTxBuilder(
       props.pubKey,
       props.fee,
-      props.networkDetails,
+      server,
+      props.networkDetails.networkPassphrase,
     );
     const xdr = await makePayment(
       props.tokenId,
@@ -33,7 +40,8 @@ export const ConfirmPayment = (props: ConfirmPaymentProps) => {
       props.destination,
       props.pubKey,
       builder,
-      props.networkDetails,
+      server,
+      props.networkDetails.networkPassphrase,
     );
     const options = {
       network: props.networkDetails.network,
