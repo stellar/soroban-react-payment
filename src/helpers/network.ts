@@ -27,3 +27,15 @@ export const connectNetwork = async () => {
     };
   }
 };
+
+export const signTx = async (
+  xdr: string,
+  options: {
+    network?: string;
+    accountToSign?: string;
+    networkPassphrase?: string;
+  },
+) => {
+  const signedTx = await freighterApi.signTransaction(xdr, options);
+  return signedTx;
+};

@@ -22,6 +22,9 @@ module.exports = {
     "react/jsx-filename-extension": ["error", { extensions: [".tsx", ".jsx"] }],
     "jsdoc/newline-after-description": "off",
     "max-classes-per-file": "off",
+    "no-bitwise": "off",
+    "no-param-reassign": "off",
+    "no-restricted-syntax": "off",
   },
   settings: {
     "import/resolver": {

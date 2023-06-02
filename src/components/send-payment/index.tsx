@@ -14,14 +14,18 @@ import { ERRORS } from "helpers/error";
 import {
   getTxBuilder,
   BASE_FEE,
+  XLM_DECIMALS,
   getTokenSymbol,
+  getTokenDecimals,
   getTokenBalance,
   submitTx,
 } from "helpers/soroban";
+
 import { SendAmount } from "./send-amount";
 import { ConnectWallet } from "./connect-wallet";
 import { PaymentDest } from "./payment-destination";
 import { TokenInput } from "./token-input";
+import { ConfirmPayment } from "./confirm-payment";
 import { Fee } from "./fee";
 import { SubmitPayment } from "./submit-payment";
 import { TxResult } from "./tx-result";
@@ -45,9 +49,8 @@ export const SendPayment = (props: SendPaymentProps) => {
     null as string | null,
   );
 
-  // @ts-ignore
-  // eslint-disable-next-line
   const [tokenId, setTokenId] = React.useState("");
+  const [tokenDecimals, setTokenDecimals] = React.useState(XLM_DECIMALS);
   const [paymentDestination, setPaymentDest] = React.useState("");
   const [sendAmount, setSendAmount] = React.useState("");
   const [tokenSymbol, setTokenSymbol] = React.useState("");
@@ -55,6 +58,7 @@ export const SendPayment = (props: SendPaymentProps) => {
   const [fee, setFee] = React.useState(BASE_FEE);
   const [memo, setMemo] = React.useState("");
   const [txResultXDR, settxResultXDR] = React.useState("");
+  const [signedXdr, setSignedXdr] = React.useState("");
 
   async function setToken(id: string) {
     setTokenId(id);
@@ -86,6 +90,18 @@ export const SendPayment = (props: SendPaymentProps) => {
       );
       setTokenBalance(balance);
 
+      const txBuilderDecimals = getTxBuilder(
+        activePubKey!,
+        BASE_FEE,
+        activeNetworkDetails.networkPassphrase,
+      );
+      const decimals = await getTokenDecimals(
+        id,
+        txBuilderDecimals,
+        activeNetworkDetails,
+      );
+      setTokenDecimals(decimals);
+
       return true;
     } catch (error) {
       console.log(error);
@@ -102,19 +118,51 @@ export const SendPayment = (props: SendPaymentProps) => {
       }
       case 8: {
         const submit = async () => {
-          // XDR work TBD
-          const result = await submitTx("", activeNetworkDetails);
+          const result = await submitTx(signedXdr, activeNetworkDetails);
           settxResultXDR(result);
         };
         return (
           <SubmitPayment
+            network={activeNetworkDetails.network}
+            destination={paymentDestination}
+            amount={sendAmount}
             tokenSymbol={tokenSymbol}
+            fee={fee}
+            memo={memo}
             onClick={submit}
+          />
+        );
+      }
+      case 7: {
+        const setSignedTx = (xdr: string) => {
+          setSignedXdr(xdr);
+          setStepCount((stepCount + 1) as StepCount);
+        };
+        return (
+          <ConfirmPayment
+            tokenId={tokenId}
+            tokenDecimals={tokenDecimals}
+            pubKey={activePubKey!}
+            tokenSymbol={tokenSymbol}
+            onTxSign={setSignedTx}
             network={activeNetworkDetails.network}
             destination={paymentDestination}
             amount={sendAmount}
             fee={fee}
             memo={memo}
+            networkDetails={activeNetworkDetails}
+          />
+        );
+      }
+      case 6: {
+        const onClick = () => setStepCount((stepCount + 1) as StepCount);
+        return (
+          <Fee
+            fee={fee}
+            memo={memo}
+            onClick={onClick}
+            setFee={setFee}
+            setMemo={setMemo}
           />
         );
       }
@@ -135,7 +183,7 @@ export const SendPayment = (props: SendPaymentProps) => {
         return (
           <SendAmount
             amount={sendAmount}
-            decimals={7} // TBD
+            decimals={tokenDecimals}
             setAmount={setSendAmount}
             onClick={onClick}
             balance={tokenBalance}
