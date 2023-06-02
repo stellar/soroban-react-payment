@@ -5,15 +5,13 @@ import {
   Heading,
   IconButton,
   Icon,
+  Profile,
 } from "@stellar/design-system";
-import { truncateString } from "utils/format";
-import { IdenticonImg } from "components/identicon";
 
 interface SubmitPaymentProps {
   amount: string;
   destination: string;
   fee: string;
-  pubKey: string;
   memo: string;
   network: string;
   onClick: () => void;
@@ -33,8 +31,7 @@ export const SubmitPayment = (props: SubmitPaymentProps) => (
       <div className="tx-detail-item">
         <p className="detail-header">To</p>
         <div className="dest-identicon">
-          <p>{truncateString(props.destination)}</p>
-          <IdenticonImg publicKey={props.pubKey} />
+          <Profile isShort publicAddress={props.destination} size="sm" />
         </div>
       </div>
       <div className="tx-detail-item">
@@ -58,7 +55,7 @@ export const SubmitPayment = (props: SubmitPaymentProps) => (
         <div className="xdr-copy">
           <IconButton
             altText="copy signed xdr data"
-            icon={<Icon.ContentCopy />}
+            icon={<Icon.ContentCopy key="copy-icon" />}
           />
         </div>
       </Card>

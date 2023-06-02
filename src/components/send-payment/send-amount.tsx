@@ -1,9 +1,11 @@
 import React, { ChangeEvent } from "react";
 import BigNumber from "bignumber.js";
 import { Button, Heading, Input } from "@stellar/design-system";
+import { formatTokenAmount } from "utils/format";
 
 interface SendAmountProps {
   amount: string;
+  decimals: number;
   balance: string;
   onClick: () => void;
   setAmount: (amount: string) => void;
@@ -24,7 +26,8 @@ export const SendAmount = (props: SendAmountProps) => {
         Available Balance
       </Heading>
       <Heading size="sm" as="h2" addlClassName="balance">
-        {props.balance} {props.tokenSymbol}
+        {formatTokenAmount(new BigNumber(props.balance), props.decimals)}{" "}
+        {props.tokenSymbol}
       </Heading>
       <Input
         fieldSize="md"

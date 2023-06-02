@@ -1,5 +1,11 @@
 import React from "react";
-import { Card, Caption, Layout, Notification } from "@stellar/design-system";
+import {
+  Card,
+  Caption,
+  Layout,
+  Notification,
+  Profile,
+} from "@stellar/design-system";
 import freighterApi from "@stellar/freighter-api";
 
 import { connectNetwork, Networks, NetworkDetails } from "utils/network";
@@ -12,8 +18,6 @@ import {
   getTokenBalance,
   submitTx,
 } from "utils/soroban";
-import { truncateString } from "utils/format";
-import { IdenticonImg } from "components/identicon";
 import { SendAmount } from "./send-amount";
 import { ConnectWallet } from "./connect-wallet";
 import { PaymentDest } from "./payment-destination";
@@ -57,31 +61,39 @@ export const SendPayment = (props: SendPaymentProps) => {
   async function setToken(id: string) {
     setTokenId(id);
 
-    const txBuilderSymbol = getTxBuilder(
-      activePubKey!,
-      BASE_FEE,
-      activeNetworkDetails.networkPassphrase,
-    );
+    try {
+      const txBuilderSymbol = getTxBuilder(
+        activePubKey!,
+        BASE_FEE,
+        activeNetworkDetails.networkPassphrase,
+      );
 
-    const symbol = await getTokenSymbol(
-      id,
-      txBuilderSymbol,
-      activeNetworkDetails,
-    );
-    setTokenSymbol(symbol);
+      const symbol = await getTokenSymbol(
+        id,
+        txBuilderSymbol,
+        activeNetworkDetails,
+      );
+      setTokenSymbol(symbol);
 
-    const txBuilderBalance = getTxBuilder(
-      activePubKey!,
-      BASE_FEE,
-      activeNetworkDetails.networkPassphrase,
-    );
-    const balance = await getTokenBalance(
-      activePubKey!,
-      id,
-      txBuilderBalance,
-      activeNetworkDetails,
-    );
-    setTokenBalance(balance);
+      const txBuilderBalance = getTxBuilder(
+        activePubKey!,
+        BASE_FEE,
+        activeNetworkDetails.networkPassphrase,
+      );
+      const balance = await getTokenBalance(
+        activePubKey!,
+        id,
+        txBuilderBalance,
+        activeNetworkDetails,
+      );
+      setTokenBalance(balance);
+
+      return true;
+    } catch (error) {
+      console.log(error);
+      setConnectionError("Unable to fetch token details.");
+      return false;
+    }
   }
 
   function renderStep(step: StepCount) {
@@ -94,7 +106,6 @@ export const SendPayment = (props: SendPaymentProps) => {
         };
         return (
           <SubmitPayment
-            pubKey={activePubKey!}
             tokenSymbol={tokenSymbol}
             onClick={submit}
             network={activeNetworkDetails.network}
@@ -122,6 +133,7 @@ export const SendPayment = (props: SendPaymentProps) => {
         return (
           <SendAmount
             amount={sendAmount}
+            decimals={7} // TBD
             setAmount={setSendAmount}
             onClick={onClick}
             balance={tokenBalance}
@@ -131,8 +143,11 @@ export const SendPayment = (props: SendPaymentProps) => {
       }
       case 3: {
         const onClick = async (value: string) => {
-          await setToken(value);
-          setStepCount((stepCount + 1) as StepCount);
+          const success = await setToken(value);
+
+          if (success) {
+            setStepCount((stepCount + 1) as StepCount);
+          }
         };
         return <TokenInput onClick={onClick} />;
       }
@@ -191,14 +206,7 @@ export const SendPayment = (props: SendPaymentProps) => {
       )}
       <div className="Layout__inset account-badge-row">
         {activePubKey !== null && (
-          <div className="account-badge">
-            <div className="Badge Badge--pending">
-              <IdenticonImg publicKey={activePubKey} />
-              <Caption size="xs" addlClassName="badge-pubkey">
-                {truncateString(activePubKey)}
-              </Caption>
-            </div>
-          </div>
+          <Profile isShort publicAddress={activePubKey} size="sm" />
         )}
       </div>
       <div className="Layout__inset layout">
