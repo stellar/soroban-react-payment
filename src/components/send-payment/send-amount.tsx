@@ -7,7 +7,6 @@ interface SendAmountProps {
   amount: string;
   decimals: number;
   balance: string;
-  decimals: number;
   onClick: () => void;
   setAmount: (amount: string) => void;
   tokenSymbol: string;

@@ -3,6 +3,7 @@ import BigNumber from "bignumber.js";
 import { NetworkDetails } from "./network";
 import { stroopToXlm } from "./format";
 import { I128 } from "./xdr";
+import { ERRORS } from "./error";
 
 // TODO: once soroban supports estimated fees, we can fetch this
 export const BASE_FEE = "100";
@@ -170,15 +171,16 @@ export const getServer = (networkDetails: NetworkDetails) =>
     allowHttp: networkDetails.networkUrl.startsWith("http://"),
   });
 
-export const getTxBuilder = (
+export const getTxBuilder = async (
   pubKey: string,
   fee: string,
-  networkPassphrase: string,
+  networkDetails: NetworkDetails,
 ) => {
-  const source = new SorobanClient.Account(pubKey, "0");
+  const server = getServer(networkDetails);
+  const source = await server.getAccount(pubKey);
   return new SorobanClient.TransactionBuilder(source, {
     fee,
-    networkPassphrase,
+    networkPassphrase: networkDetails.networkPassphrase,
   });
 };
 
@@ -208,19 +210,31 @@ export const submitTx = async (
   );
 
   const server = getServer(networkDetails);
-  let response = (await server.sendTransaction(tx)) as any;
+  const sendResponse = await server.sendTransaction(tx);
 
-  // Poll this until the status is not "pending"
-  while (response.status === SorobanTxStatus.PENDING) {
-    // See if the transaction is complete
-    // eslint-disable-next-line no-await-in-loop
-    response = await server.getTransaction(response.id);
-    // Wait a second
-    // eslint-disable-next-line no-await-in-loop
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  if (sendResponse.errorResultXdr) {
+    throw new Error(ERRORS.UNABLE_TO_SUBMIT_TX);
   }
 
-  return response;
+  if (sendResponse.status === "PENDING") {
+    let txResponse = await server.getTransaction(sendResponse.hash);
+
+    // Poll this until the status is not "pending"
+    // can't import this type for some reason https://github.com/stellar/js-soroban-client/blob/b90029166e570cd27a37e89a20f7c814f4497466/src/soroban_rpc.ts
+    while (txResponse.status === "NOT_FOUND") {
+      // See if the transaction is complete
+      // eslint-disable-next-line no-await-in-loop
+      txResponse = await server.getTransaction(sendResponse.hash);
+      // Wait a second
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    return txResponse.resultXdr!;
+    // eslint-disable-next-line no-else-return
+  } else {
+    throw new Error(sendResponse.status);
+  }
 };
 
 export const getTokenSymbol = async (

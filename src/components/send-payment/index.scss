@@ -91,6 +91,16 @@
         width: 100%;
         display: flex;
         justify-content: flex-end;
+        margin-bottom: 1rem;
+      }
+
+      .xdr-data {
+        display: -webkit-box;
+        width: 100%;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 5;
+        word-wrap: break-word;
       }
     }
   }

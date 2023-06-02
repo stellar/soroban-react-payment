@@ -26,7 +26,7 @@ export const TxResult = (props: TxResultProps) => (
             icon={<Icon.ContentCopy key="copy-icon" />}
           />
         </div>
-        {props.resultXDR}
+        <div className="xdr-data">{props.resultXDR}</div>
       </Card>
     </div>
     <div className="submit-row-send">

@@ -22,10 +22,10 @@ interface ConfirmPaymentProps {
 export const ConfirmPayment = (props: ConfirmPaymentProps) => {
   const signWithFreighter = async () => {
     const amount = parseTokenAmount(props.amount, props.tokenDecimals);
-    const builder = getTxBuilder(
+    const builder = await getTxBuilder(
       props.pubKey,
       props.fee,
-      props.networkDetails.networkPassphrase,
+      props.networkDetails,
     );
     const xdr = await makePayment(
       props.tokenId,

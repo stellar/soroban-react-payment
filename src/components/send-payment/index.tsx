@@ -19,6 +19,7 @@ import {
   getTokenDecimals,
   getTokenBalance,
   submitTx,
+  // getServer
 } from "helpers/soroban";
 
 import { SendAmount } from "./send-amount";
@@ -64,10 +65,10 @@ export const SendPayment = (props: SendPaymentProps) => {
     setTokenId(id);
 
     try {
-      const txBuilderSymbol = getTxBuilder(
+      const txBuilderSymbol = await getTxBuilder(
         activePubKey!,
         BASE_FEE,
-        activeNetworkDetails.networkPassphrase,
+        activeNetworkDetails,
       );
 
       const symbol = await getTokenSymbol(
@@ -77,10 +78,10 @@ export const SendPayment = (props: SendPaymentProps) => {
       );
       setTokenSymbol(symbol);
 
-      const txBuilderBalance = getTxBuilder(
+      const txBuilderBalance = await getTxBuilder(
         activePubKey!,
         BASE_FEE,
-        activeNetworkDetails.networkPassphrase,
+        activeNetworkDetails,
       );
       const balance = await getTokenBalance(
         activePubKey!,
@@ -90,10 +91,10 @@ export const SendPayment = (props: SendPaymentProps) => {
       );
       setTokenBalance(balance);
 
-      const txBuilderDecimals = getTxBuilder(
+      const txBuilderDecimals = await getTxBuilder(
         activePubKey!,
         BASE_FEE,
-        activeNetworkDetails.networkPassphrase,
+        activeNetworkDetails,
       );
       const decimals = await getTokenDecimals(
         id,
@@ -112,14 +113,21 @@ export const SendPayment = (props: SendPaymentProps) => {
 
   function renderStep(step: StepCount) {
     switch (step) {
-      case 9: {
+      case 8: {
         const onClick = () => setStepCount(1);
         return <TxResult onClick={onClick} resultXDR={txResultXDR} />;
       }
-      case 8: {
+      case 7: {
         const submit = async () => {
-          const result = await submitTx(signedXdr, activeNetworkDetails);
-          settxResultXDR(result);
+          try {
+            const result = await submitTx(signedXdr, activeNetworkDetails);
+
+            settxResultXDR(result);
+            setStepCount((stepCount + 1) as StepCount);
+          } catch (error) {
+            console.log(error);
+            setConnectionError(ERRORS.UNABLE_TO_SUBMIT_TX);
+          }
         };
         return (
           <SubmitPayment
@@ -128,12 +136,13 @@ export const SendPayment = (props: SendPaymentProps) => {
             amount={sendAmount}
             tokenSymbol={tokenSymbol}
             fee={fee}
+            signedXdr={signedXdr}
             memo={memo}
             onClick={submit}
           />
         );
       }
-      case 7: {
+      case 6: {
         const setSignedTx = (xdr: string) => {
           setSignedXdr(xdr);
           setStepCount((stepCount + 1) as StepCount);
@@ -151,18 +160,6 @@ export const SendPayment = (props: SendPaymentProps) => {
             fee={fee}
             memo={memo}
             networkDetails={activeNetworkDetails}
-          />
-        );
-      }
-      case 6: {
-        const onClick = () => setStepCount((stepCount + 1) as StepCount);
-        return (
-          <Fee
-            fee={fee}
-            memo={memo}
-            onClick={onClick}
-            setFee={setFee}
-            setMemo={setMemo}
           />
         );
       }
@@ -247,6 +244,10 @@ export const SendPayment = (props: SendPaymentProps) => {
 
     setActiveNetworkDetails(networkDetails);
     setActivePubKey(pubKey);
+
+    // const testServer = getServer(networkDetails)
+    // const testTx = await testServer.getTransaction("dafb7e94340bccf4de95a728022c0c1ab5cd9a5d362bc3109d60047d0f2800ea")
+    // console.log(testTx)
   }
 
   return (

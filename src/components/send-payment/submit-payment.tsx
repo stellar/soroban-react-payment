@@ -15,6 +15,7 @@ interface SubmitPaymentProps {
   memo: string;
   network: string;
   onClick: () => void;
+  signedXdr: string;
   tokenSymbol: string;
 }
 
@@ -58,6 +59,7 @@ export const SubmitPayment = (props: SubmitPaymentProps) => (
             icon={<Icon.ContentCopy key="copy-icon" />}
           />
         </div>
+        <div className="xdr-data">{props.signedXdr}</div>
       </Card>
     </div>
     <div className="submit-row-confirm">
