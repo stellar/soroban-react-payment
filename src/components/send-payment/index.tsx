@@ -2,21 +2,24 @@ import React from "react";
 import { Card, Caption, Layout, Notification } from "@stellar/design-system";
 import freighterApi from "@stellar/freighter-api";
 
-import { connectNetwork, Networks, NetworkDetails } from "utils/network";
+import { connectNetwork, Networks, NetworkDetails } from "helpers/network";
 import { createPortal } from "react-dom";
-import { ERRORS } from "utils/error";
+import { ERRORS } from "helpers/error";
 import {
   getTxBuilder,
   BASE_FEE,
+  XLM_DECIMALS,
   getTokenSymbol,
   getTokenBalance,
-} from "utils/soroban";
-import { truncateString } from "utils/format";
+  getTokenDecimals,
+} from "helpers/soroban";
+import { truncateString } from "helpers/format";
 import { IdenticonImg } from "components/identicon";
 import { SendAmount } from "./send-amount";
 import { ConnectWallet } from "./connect-wallet";
 import { PaymentDest } from "./payment-destination";
 import { TokenInput } from "./token-input";
+import { ConfirmPayment } from "./confirm-payment";
 import { Fee } from "./fee";
 
 import "./index.scss";
@@ -38,8 +41,6 @@ export const SendPayment = (props: SendPaymentProps) => {
     null as string | null,
   );
 
-  // @ts-ignore
-  // eslint-disable-next-line
   const [tokenId, setTokenId] = React.useState("");
   const [paymentDestination, setPaymentDest] = React.useState("");
   const [sendAmount, setSendAmount] = React.useState("");
@@ -47,6 +48,14 @@ export const SendPayment = (props: SendPaymentProps) => {
   const [tokenBalance, setTokenBalance] = React.useState("");
   const [fee, setFee] = React.useState(BASE_FEE);
   const [memo, setMemo] = React.useState("");
+
+  // @ts-ignore
+  // eslint-disable-next-line
+  const [signedXdr, setSignedXdr] = React.useState("");
+
+  // @ts-ignore
+  // eslint-disable-next-line
+  const [tokenDecimals, setTokenDecimals] = React.useState(XLM_DECIMALS);
 
   async function setToken(id: string) {
     setTokenId(id);
@@ -76,15 +85,61 @@ export const SendPayment = (props: SendPaymentProps) => {
       activeNetworkDetails,
     );
     setTokenBalance(balance);
+
+    const txBuilderDecimals = getTxBuilder(
+      activePubKey!,
+      BASE_FEE,
+      activeNetworkDetails.networkPassphrase,
+    );
+    const decimals = await getTokenDecimals(
+      id,
+      txBuilderDecimals,
+      activeNetworkDetails,
+    );
+    setTokenDecimals(decimals);
   }
 
   function renderStep(step: StepCount) {
     switch (step) {
-      case 4: {
+      case 7: {
+        const setSignedTx = (xdr: string) => {
+          setSignedXdr(xdr);
+          setStepCount((stepCount + 1) as StepCount);
+        };
+        return (
+          <ConfirmPayment
+            tokenId={tokenId}
+            tokenDecimals={tokenDecimals}
+            pubKey={activePubKey!}
+            tokenSymbol={tokenSymbol}
+            onTxSign={setSignedTx}
+            network={activeNetworkDetails.network}
+            destination={paymentDestination}
+            amount={sendAmount}
+            fee={fee}
+            memo={memo}
+            networkDetails={activeNetworkDetails}
+          />
+        );
+      }
+      case 6: {
+        const onClick = () => setStepCount((stepCount + 1) as StepCount);
+        return (
+          <Fee
+            fee={fee}
+            memo={memo}
+            onClick={onClick}
+            setFee={setFee}
+            setMemo={setMemo}
+          />
+        );
+      }
+      case 5: {
         const onClick = () => setStepCount((stepCount + 1) as StepCount);
         return (
           <SendAmount
             amount={sendAmount}
+            decimals={tokenDecimals}
             setAmount={setSendAmount}
             onClick={onClick}
             balance={tokenBalance}
@@ -92,7 +147,7 @@ export const SendPayment = (props: SendPaymentProps) => {
           />
         );
       }
-      case 5: {
+      case 4: {
         const onClick = () => setStepCount((stepCount + 1) as StepCount);
         return (
           <Fee
