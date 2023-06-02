@@ -7,6 +7,11 @@ import { I128 } from "./xdr";
 export const BASE_FEE = "100";
 export const baseFeeXlm = stroopToXlm(BASE_FEE).toString();
 
+export enum SorobanTxStatus {
+  PENDING = "pending",
+  SUCCESS = "success",
+}
+
 export const RPC_URLS: { [key: string]: string } = {
   FUTURENET: "https://rpc-futurenet.stellar.org/",
 };
@@ -65,6 +70,31 @@ export const simulateTx = async (
   }
   const result = results[0];
   return decoder(result.xdr);
+};
+
+export const submitTx = async (
+  signedXDR: string,
+  networkDetails: NetworkDetails,
+) => {
+  const tx = SorobanClient.TransactionBuilder.fromXDR(
+    signedXDR,
+    networkDetails.networkPassphrase,
+  );
+
+  const server = getServer(networkDetails);
+  let response = (await server.sendTransaction(tx)) as any;
+
+  // Poll this until the status is not "pending"
+  while (response.status === SorobanTxStatus.PENDING) {
+    // See if the transaction is complete
+    // eslint-disable-next-line no-await-in-loop
+    response = await server.getTransaction(response.id);
+    // Wait a second
+    // eslint-disable-next-line no-await-in-loop
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
+  return response;
 };
 
 export const getTokenSymbol = async (

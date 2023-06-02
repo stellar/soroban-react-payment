@@ -10,6 +10,7 @@ import {
   BASE_FEE,
   getTokenSymbol,
   getTokenBalance,
+  submitTx,
 } from "utils/soroban";
 import { truncateString } from "utils/format";
 import { IdenticonImg } from "components/identicon";
@@ -18,6 +19,7 @@ import { ConnectWallet } from "./connect-wallet";
 import { PaymentDest } from "./payment-destination";
 import { TokenInput } from "./token-input";
 import { Fee } from "./fee";
+import { SubmitPayment } from "./submit-payment";
 
 import "./index.scss";
 
@@ -47,6 +49,10 @@ export const SendPayment = (props: SendPaymentProps) => {
   const [tokenBalance, setTokenBalance] = React.useState("");
   const [fee, setFee] = React.useState(BASE_FEE);
   const [memo, setMemo] = React.useState("");
+
+  // @ts-ignore
+  // eslint-disable-next-line
+  const [txResultXDR, settxResultXDR] = React.useState("");
 
   async function setToken(id: string) {
     setTokenId(id);
@@ -80,15 +86,22 @@ export const SendPayment = (props: SendPaymentProps) => {
 
   function renderStep(step: StepCount) {
     switch (step) {
-      case 4: {
-        const onClick = () => setStepCount((stepCount + 1) as StepCount);
+      case 7: {
+        const submit = async () => {
+          // XDR work TBD
+          const result = await submitTx("", activeNetworkDetails);
+          settxResultXDR(result);
+        };
         return (
-          <SendAmount
-            amount={sendAmount}
-            setAmount={setSendAmount}
-            onClick={onClick}
-            balance={tokenBalance}
+          <SubmitPayment
+            pubKey={activePubKey!}
             tokenSymbol={tokenSymbol}
+            onClick={submit}
+            network={activeNetworkDetails.network}
+            destination={paymentDestination}
+            amount={sendAmount}
+            fee={fee}
+            memo={memo}
           />
         );
       }
@@ -101,6 +114,18 @@ export const SendPayment = (props: SendPaymentProps) => {
             onClick={onClick}
             setFee={setFee}
             setMemo={setMemo}
+          />
+        );
+      }
+      case 4: {
+        const onClick = () => setStepCount((stepCount + 1) as StepCount);
+        return (
+          <SendAmount
+            amount={sendAmount}
+            setAmount={setSendAmount}
+            onClick={onClick}
+            balance={tokenBalance}
+            tokenSymbol={tokenSymbol}
           />
         );
       }
