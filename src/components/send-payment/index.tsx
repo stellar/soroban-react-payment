@@ -2,9 +2,9 @@ import React from "react";
 import { Card, Caption, Layout, Notification } from "@stellar/design-system";
 import freighterApi from "@stellar/freighter-api";
 
-import { connectNetwork, Networks, NetworkDetails } from "utils/network";
+import { connectNetwork, Networks, NetworkDetails } from "helpers/network";
 import { createPortal } from "react-dom";
-import { ERRORS } from "utils/error";
+import { ERRORS } from "helpers/error";
 import {
   getTxBuilder,
   BASE_FEE,
@@ -12,8 +12,8 @@ import {
   getTokenSymbol,
   getTokenBalance,
   getTokenDecimals,
-} from "utils/soroban";
-import { truncateString } from "utils/format";
+} from "helpers/soroban";
+import { truncateString } from "helpers/format";
 import { IdenticonImg } from "components/identicon";
 import { SendAmount } from "./send-amount";
 import { ConnectWallet } from "./connect-wallet";

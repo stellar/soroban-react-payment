@@ -1,8 +1,8 @@
 import React from "react";
 import { Button, Heading } from "@stellar/design-system";
-import { truncateString } from "utils/format";
-import { NetworkDetails, signTx } from "utils/network";
-import { makePayment, getTxBuilder, parseTokenAmount } from "utils/soroban";
+import { truncateString } from "helpers/format";
+import { NetworkDetails, signTx } from "helpers/network";
+import { makePayment, getTxBuilder, parseTokenAmount } from "helpers/soroban";
 import { IdenticonImg } from "components/identicon";
 
 interface ConfirmPaymentProps {
