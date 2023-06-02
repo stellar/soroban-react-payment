@@ -24,10 +24,11 @@ import { PaymentDest } from "./payment-destination";
 import { TokenInput } from "./token-input";
 import { Fee } from "./fee";
 import { SubmitPayment } from "./submit-payment";
+import { TxResult } from "./tx-result";
 
 import "./index.scss";
 
-type StepCount = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+type StepCount = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 interface SendPaymentProps {
   showHeader?: boolean;
@@ -53,9 +54,6 @@ export const SendPayment = (props: SendPaymentProps) => {
   const [tokenBalance, setTokenBalance] = React.useState("");
   const [fee, setFee] = React.useState(BASE_FEE);
   const [memo, setMemo] = React.useState("");
-
-  // @ts-ignore
-  // eslint-disable-next-line
   const [txResultXDR, settxResultXDR] = React.useState("");
 
   async function setToken(id: string) {
@@ -98,7 +96,11 @@ export const SendPayment = (props: SendPaymentProps) => {
 
   function renderStep(step: StepCount) {
     switch (step) {
-      case 7: {
+      case 9: {
+        const onClick = () => setStepCount(1);
+        return <TxResult onClick={onClick} resultXDR={txResultXDR} />;
+      }
+      case 8: {
         const submit = async () => {
           // XDR work TBD
           const result = await submitTx("", activeNetworkDetails);
