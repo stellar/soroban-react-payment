@@ -8,16 +8,16 @@ import {
 } from "@stellar/design-system";
 import freighterApi from "@stellar/freighter-api";
 
-import { connectNetwork, Networks, NetworkDetails } from "utils/network";
+import { connectNetwork, Networks, NetworkDetails } from "helpers/network";
 import { createPortal } from "react-dom";
-import { ERRORS } from "utils/error";
+import { ERRORS } from "helpers/error";
 import {
   getTxBuilder,
   BASE_FEE,
   getTokenSymbol,
   getTokenBalance,
   submitTx,
-} from "utils/soroban";
+} from "helpers/soroban";
 import { SendAmount } from "./send-amount";
 import { ConnectWallet } from "./connect-wallet";
 import { PaymentDest } from "./payment-destination";
