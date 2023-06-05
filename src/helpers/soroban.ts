@@ -3,10 +3,16 @@ import BigNumber from "bignumber.js";
 import { NetworkDetails } from "./network";
 import { stroopToXlm } from "./format";
 import { I128 } from "./xdr";
+import { ERRORS } from "./error";
 
 // TODO: once soroban supports estimated fees, we can fetch this
 export const BASE_FEE = "100";
 export const baseFeeXlm = stroopToXlm(BASE_FEE).toString();
+
+export enum SorobanTxStatus {
+  PENDING = "pending",
+  SUCCESS = "success",
+}
 export const XLM_DECIMALS = 7;
 
 export const RPC_URLS: { [key: string]: string } = {
@@ -165,12 +171,13 @@ export const getServer = (networkDetails: NetworkDetails) =>
     allowHttp: networkDetails.networkUrl.startsWith("http://"),
   });
 
-export const getTxBuilder = (
+export const getTxBuilder = async (
   pubKey: string,
   fee: string,
+  server: SorobanClient.Server,
   networkPassphrase: string,
 ) => {
-  const source = new SorobanClient.Account(pubKey, "0");
+  const source = await server.getAccount(pubKey);
   return new SorobanClient.TransactionBuilder(source, {
     fee,
     networkPassphrase,
@@ -193,12 +200,49 @@ export const simulateTx = async <ArgType>(
   return decoder(result.xdr);
 };
 
+export const submitTx = async (
+  signedXDR: string,
+  networkPassphrase: string,
+  server: SorobanClient.Server,
+) => {
+  const tx = SorobanClient.TransactionBuilder.fromXDR(
+    signedXDR,
+    networkPassphrase,
+  );
+
+  const sendResponse = await server.sendTransaction(tx);
+
+  if (sendResponse.errorResultXdr) {
+    throw new Error(ERRORS.UNABLE_TO_SUBMIT_TX);
+  }
+
+  if (sendResponse.status === "PENDING") {
+    let txResponse = await server.getTransaction(sendResponse.hash);
+
+    // Poll this until the status is not "NOT_FOUND"
+    while (txResponse.status === "NOT_FOUND") {
+      // See if the transaction is complete
+      // eslint-disable-next-line no-await-in-loop
+      txResponse = await server.getTransaction(sendResponse.hash);
+      // Wait a second
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    return txResponse.resultXdr!;
+    // eslint-disable-next-line no-else-return
+  } else {
+    throw new Error(
+      `Unabled to submit transaction, status: ${sendResponse.status}`,
+    );
+  }
+};
+
 export const getTokenSymbol = async (
   tokenId: string,
   txBuilder: SorobanClient.TransactionBuilder,
-  networkDetails: NetworkDetails,
+  server: SorobanClient.Server,
 ) => {
-  const server = getServer(networkDetails);
   const contract = new SorobanClient.Contract(tokenId);
   const tx = txBuilder
     .addOperation(contract.call("symbol"))
@@ -212,9 +256,8 @@ export const getTokenSymbol = async (
 export const getTokenName = async (
   tokenId: string,
   txBuilder: SorobanClient.TransactionBuilder,
-  networkDetails: NetworkDetails,
+  server: SorobanClient.Server,
 ) => {
-  const server = getServer(networkDetails);
   const contract = new SorobanClient.Contract(tokenId);
   const tx = txBuilder
     .addOperation(contract.call("name"))
@@ -228,9 +271,8 @@ export const getTokenName = async (
 export const getTokenDecimals = async (
   tokenId: string,
   txBuilder: SorobanClient.TransactionBuilder,
-  networkDetails: NetworkDetails,
+  server: SorobanClient.Server,
 ) => {
-  const server = getServer(networkDetails);
   const contract = new SorobanClient.Contract(tokenId);
   const tx = txBuilder
     .addOperation(contract.call("decimals"))
@@ -245,10 +287,9 @@ export const getTokenBalance = async (
   address: string,
   tokenId: string,
   txBuilder: SorobanClient.TransactionBuilder,
-  networkDetails: NetworkDetails,
+  server: SorobanClient.Server,
 ) => {
   const params = [accountToScVal(address)];
-  const server = getServer(networkDetails);
   const contract = new SorobanClient.Contract(tokenId);
   const tx = txBuilder
     .addOperation(contract.call("balance", ...params))
@@ -264,10 +305,11 @@ export const makePayment = async (
   amount: number,
   to: string,
   pubKey: string,
+  memo: string,
   txBuilder: SorobanClient.TransactionBuilder,
-  networkDetails: NetworkDetails,
+  server: SorobanClient.Server,
+  networkPassphrase: string,
 ) => {
-  const server = getServer(networkDetails);
   const contract = new SorobanClient.Contract(tokenId);
   const tx = txBuilder
     .addOperation(
@@ -280,12 +322,15 @@ export const makePayment = async (
         ],
       ),
     )
-    .setTimeout(SorobanClient.TimeoutInfinite)
-    .build();
+    .setTimeout(SorobanClient.TimeoutInfinite);
+
+  if (memo.length > 0) {
+    tx.addMemo(SorobanClient.Memo.text(memo));
+  }
 
   const preparedTransaction = await server.prepareTransaction(
-    tx,
-    networkDetails.networkPassphrase,
+    tx.build(),
+    networkPassphrase,
   );
 
   return preparedTransaction.toXDR();

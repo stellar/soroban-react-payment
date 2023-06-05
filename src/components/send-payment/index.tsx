@@ -1,5 +1,12 @@
 import React from "react";
-import { Card, Caption, Layout, Notification } from "@stellar/design-system";
+import {
+  Card,
+  Caption,
+  Layout,
+  Notification,
+  Profile,
+  Loader,
+} from "@stellar/design-system";
 import freighterApi from "@stellar/freighter-api";
 
 import { connectNetwork, Networks, NetworkDetails } from "helpers/network";
@@ -10,21 +17,24 @@ import {
   BASE_FEE,
   XLM_DECIMALS,
   getTokenSymbol,
-  getTokenBalance,
   getTokenDecimals,
+  getTokenBalance,
+  getServer,
+  submitTx,
 } from "helpers/soroban";
-import { truncateString } from "helpers/format";
-import { IdenticonImg } from "components/identicon";
+
 import { SendAmount } from "./send-amount";
 import { ConnectWallet } from "./connect-wallet";
 import { PaymentDest } from "./payment-destination";
 import { TokenInput } from "./token-input";
 import { ConfirmPayment } from "./confirm-payment";
 import { Fee } from "./fee";
+import { SubmitPayment } from "./submit-payment";
+import { TxResult } from "./tx-result";
 
 import "./index.scss";
 
-type StepCount = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+type StepCount = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 interface SendPaymentProps {
   showHeader?: boolean;
@@ -42,66 +52,113 @@ export const SendPayment = (props: SendPaymentProps) => {
   );
 
   const [tokenId, setTokenId] = React.useState("");
+  const [tokenDecimals, setTokenDecimals] = React.useState(XLM_DECIMALS);
   const [paymentDestination, setPaymentDest] = React.useState("");
   const [sendAmount, setSendAmount] = React.useState("");
   const [tokenSymbol, setTokenSymbol] = React.useState("");
   const [tokenBalance, setTokenBalance] = React.useState("");
   const [fee, setFee] = React.useState(BASE_FEE);
   const [memo, setMemo] = React.useState("");
-
-  // @ts-ignore
-  // eslint-disable-next-line
+  const [txResultXDR, settxResultXDR] = React.useState("");
   const [signedXdr, setSignedXdr] = React.useState("");
 
-  // @ts-ignore
-  // eslint-disable-next-line
-  const [tokenDecimals, setTokenDecimals] = React.useState(XLM_DECIMALS);
+  // 2 basic loading states for now
+  const [isLoadingTokenDetails, setTokenDetails] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   async function setToken(id: string) {
+    setTokenDetails(true);
     setTokenId(id);
 
-    const txBuilderSymbol = getTxBuilder(
-      activePubKey!,
-      BASE_FEE,
-      activeNetworkDetails.networkPassphrase,
-    );
+    const server = getServer(activeNetworkDetails);
 
-    const symbol = await getTokenSymbol(
-      id,
-      txBuilderSymbol,
-      activeNetworkDetails,
-    );
-    setTokenSymbol(symbol);
+    try {
+      const txBuilderSymbol = await getTxBuilder(
+        activePubKey!,
+        BASE_FEE,
+        server,
+        activeNetworkDetails.networkPassphrase,
+      );
 
-    const txBuilderBalance = getTxBuilder(
-      activePubKey!,
-      BASE_FEE,
-      activeNetworkDetails.networkPassphrase,
-    );
-    const balance = await getTokenBalance(
-      activePubKey!,
-      id,
-      txBuilderBalance,
-      activeNetworkDetails,
-    );
-    setTokenBalance(balance);
+      const symbol = await getTokenSymbol(id, txBuilderSymbol, server);
+      setTokenSymbol(symbol);
 
-    const txBuilderDecimals = getTxBuilder(
-      activePubKey!,
-      BASE_FEE,
-      activeNetworkDetails.networkPassphrase,
-    );
-    const decimals = await getTokenDecimals(
-      id,
-      txBuilderDecimals,
-      activeNetworkDetails,
-    );
-    setTokenDecimals(decimals);
+      const txBuilderBalance = await getTxBuilder(
+        activePubKey!,
+        BASE_FEE,
+        server,
+        activeNetworkDetails.networkPassphrase,
+      );
+      const balance = await getTokenBalance(
+        activePubKey!,
+        id,
+        txBuilderBalance,
+        server,
+      );
+      setTokenBalance(balance);
+
+      const txBuilderDecimals = await getTxBuilder(
+        activePubKey!,
+        BASE_FEE,
+        server,
+        activeNetworkDetails.networkPassphrase,
+      );
+      const decimals = await getTokenDecimals(id, txBuilderDecimals, server);
+      setTokenDecimals(decimals);
+      setTokenDetails(false);
+
+      return true;
+    } catch (error) {
+      console.log(error);
+      setConnectionError("Unable to fetch token details.");
+      setTokenDetails(false);
+
+      return false;
+    }
   }
 
   function renderStep(step: StepCount) {
     switch (step) {
+      case 8: {
+        const onClick = () => setStepCount(1);
+        return <TxResult onClick={onClick} resultXDR={txResultXDR} />;
+      }
       case 7: {
+        const submit = async () => {
+          setIsSubmitting(true);
+          try {
+            const server = getServer(activeNetworkDetails);
+            const result = await submitTx(
+              signedXdr,
+              activeNetworkDetails.networkPassphrase,
+              server,
+            );
+
+            settxResultXDR(result);
+            setIsSubmitting(false);
+
+            setStepCount((stepCount + 1) as StepCount);
+          } catch (error) {
+            console.log(error);
+            setIsSubmitting(false);
+            setConnectionError(ERRORS.UNABLE_TO_SUBMIT_TX);
+          }
+        };
+        return (
+          <SubmitPayment
+            network={activeNetworkDetails.network}
+            destination={paymentDestination}
+            amount={sendAmount}
+            tokenSymbol={tokenSymbol}
+            fee={fee}
+            signedXdr={signedXdr}
+            isSubmitting={isSubmitting}
+            memo={memo}
+            onClick={submit}
+          />
+        );
+      }
+      case 6: {
         const setSignedTx = (xdr: string) => {
           setSignedXdr(xdr);
           setStepCount((stepCount + 1) as StepCount);
@@ -122,7 +179,7 @@ export const SendPayment = (props: SendPaymentProps) => {
           />
         );
       }
-      case 6: {
+      case 5: {
         const onClick = () => setStepCount((stepCount + 1) as StepCount);
         return (
           <Fee
@@ -134,7 +191,7 @@ export const SendPayment = (props: SendPaymentProps) => {
           />
         );
       }
-      case 5: {
+      case 4: {
         const onClick = () => setStepCount((stepCount + 1) as StepCount);
         return (
           <SendAmount
@@ -147,22 +204,20 @@ export const SendPayment = (props: SendPaymentProps) => {
           />
         );
       }
-      case 4: {
-        const onClick = () => setStepCount((stepCount + 1) as StepCount);
-        return (
-          <Fee
-            fee={fee}
-            memo={memo}
-            onClick={onClick}
-            setFee={setFee}
-            setMemo={setMemo}
-          />
-        );
-      }
       case 3: {
+        if (isLoadingTokenDetails) {
+          return (
+            <div className="loading">
+              <Loader />
+            </div>
+          );
+        }
         const onClick = async (value: string) => {
-          await setToken(value);
-          setStepCount((stepCount + 1) as StepCount);
+          const success = await setToken(value);
+
+          if (success) {
+            setStepCount((stepCount + 1) as StepCount);
+          }
         };
         return <TokenInput onClick={onClick} />;
       }
@@ -221,14 +276,7 @@ export const SendPayment = (props: SendPaymentProps) => {
       )}
       <div className="Layout__inset account-badge-row">
         {activePubKey !== null && (
-          <div className="account-badge">
-            <div className="Badge Badge--pending">
-              <IdenticonImg publicKey={activePubKey} />
-              <Caption size="xs" addlClassName="badge-pubkey">
-                {truncateString(activePubKey)}
-              </Caption>
-            </div>
-          </div>
+          <Profile isShort publicAddress={activePubKey} size="sm" />
         )}
       </div>
       <div className="Layout__inset layout">

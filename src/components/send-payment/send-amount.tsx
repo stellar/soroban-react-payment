@@ -5,8 +5,8 @@ import { formatTokenAmount } from "helpers/format";
 
 interface SendAmountProps {
   amount: string;
-  balance: string;
   decimals: number;
+  balance: string;
   onClick: () => void;
   setAmount: (amount: string) => void;
   tokenSymbol: string;
