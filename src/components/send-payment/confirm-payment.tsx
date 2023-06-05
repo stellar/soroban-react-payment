@@ -1,6 +1,5 @@
 import React from "react";
-import { Button, Heading } from "@stellar/design-system";
-import { truncateString } from "helpers/format";
+import { Button, Heading, Profile } from "@stellar/design-system";
 import { NetworkDetails, signTx } from "helpers/network";
 import {
   makePayment,
@@ -8,7 +7,6 @@ import {
   parseTokenAmount,
   getServer,
 } from "helpers/soroban";
-import { IdenticonImg } from "components/identicon";
 
 interface ConfirmPaymentProps {
   amount: string;
@@ -39,6 +37,7 @@ export const ConfirmPayment = (props: ConfirmPaymentProps) => {
       amount.toNumber(),
       props.destination,
       props.pubKey,
+      props.memo,
       builder,
       server,
       props.networkDetails.networkPassphrase,
@@ -59,28 +58,27 @@ export const ConfirmPayment = (props: ConfirmPaymentProps) => {
       <div className="tx-details">
         <div className="tx-detail-item">
           <p className="detail-header">Network</p>
-          <p>{props.network}</p>
+          <p className="detail-value">{props.network}</p>
         </div>
         <div className="tx-detail-item">
           <p className="detail-header">To</p>
           <div className="dest-identicon">
-            <p>{truncateString(props.destination)}</p>
-            <IdenticonImg publicKey={props.pubKey} />
+            <Profile isShort publicAddress={props.destination} size="sm" />
           </div>
         </div>
         <div className="tx-detail-item">
           <p className="detail-header">Amount</p>
-          <p>
+          <p className="detail-value">
             {props.amount} {props.tokenSymbol}
           </p>
         </div>
         <div className="tx-detail-item">
           <p className="detail-header">Fee</p>
-          <p>{props.fee} XLM</p>
+          <p className="detail-value">{props.fee} XLM</p>
         </div>
         <div className="tx-detail-item">
           <p className="detail-header">Memo</p>
-          <p>{props.memo}</p>
+          <p className="detail-value">{props.memo}</p>
         </div>
       </div>
       <div className="submit-row-confirm">

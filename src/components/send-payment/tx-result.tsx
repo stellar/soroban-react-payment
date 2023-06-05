@@ -6,6 +6,7 @@ import {
   Icon,
   Heading,
 } from "@stellar/design-system";
+import { copyContent } from "helpers/dom";
 
 interface TxResultProps {
   resultXDR: string;
@@ -24,6 +25,7 @@ export const TxResult = (props: TxResultProps) => (
           <IconButton
             altText="copy result xdr data"
             icon={<Icon.ContentCopy key="copy-icon" />}
+            onClick={() => copyContent(props.resultXDR)}
           />
         </div>
         <div className="xdr-data">{props.resultXDR}</div>

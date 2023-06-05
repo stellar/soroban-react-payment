@@ -5,6 +5,7 @@ import {
   Layout,
   Notification,
   Profile,
+  Loader,
 } from "@stellar/design-system";
 import freighterApi from "@stellar/freighter-api";
 
@@ -61,7 +62,12 @@ export const SendPayment = (props: SendPaymentProps) => {
   const [txResultXDR, settxResultXDR] = React.useState("");
   const [signedXdr, setSignedXdr] = React.useState("");
 
+  // 2 basic loading states for now
+  const [isLoadingTokenDetails, setTokenDetails] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   async function setToken(id: string) {
+    setTokenDetails(true);
     setTokenId(id);
 
     const server = getServer(activeNetworkDetails);
@@ -99,11 +105,14 @@ export const SendPayment = (props: SendPaymentProps) => {
       );
       const decimals = await getTokenDecimals(id, txBuilderDecimals, server);
       setTokenDecimals(decimals);
+      setTokenDetails(false);
 
       return true;
     } catch (error) {
       console.log(error);
       setConnectionError("Unable to fetch token details.");
+      setTokenDetails(false);
+
       return false;
     }
   }
@@ -116,6 +125,7 @@ export const SendPayment = (props: SendPaymentProps) => {
       }
       case 7: {
         const submit = async () => {
+          setIsSubmitting(true);
           try {
             const server = getServer(activeNetworkDetails);
             const result = await submitTx(
@@ -125,9 +135,12 @@ export const SendPayment = (props: SendPaymentProps) => {
             );
 
             settxResultXDR(result);
+            setIsSubmitting(false);
+
             setStepCount((stepCount + 1) as StepCount);
           } catch (error) {
             console.log(error);
+            setIsSubmitting(false);
             setConnectionError(ERRORS.UNABLE_TO_SUBMIT_TX);
           }
         };
@@ -139,6 +152,7 @@ export const SendPayment = (props: SendPaymentProps) => {
             tokenSymbol={tokenSymbol}
             fee={fee}
             signedXdr={signedXdr}
+            isSubmitting={isSubmitting}
             memo={memo}
             onClick={submit}
           />
@@ -191,6 +205,13 @@ export const SendPayment = (props: SendPaymentProps) => {
         );
       }
       case 3: {
+        if (isLoadingTokenDetails) {
+          return (
+            <div className="loading">
+              <Loader />
+            </div>
+          );
+        }
         const onClick = async (value: string) => {
           const success = await setToken(value);
 

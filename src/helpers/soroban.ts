@@ -305,6 +305,7 @@ export const makePayment = async (
   amount: number,
   to: string,
   pubKey: string,
+  memo: string,
   txBuilder: SorobanClient.TransactionBuilder,
   server: SorobanClient.Server,
   networkPassphrase: string,
@@ -321,11 +322,14 @@ export const makePayment = async (
         ],
       ),
     )
-    .setTimeout(SorobanClient.TimeoutInfinite)
-    .build();
+    .setTimeout(SorobanClient.TimeoutInfinite);
+
+  if (memo.length > 0) {
+    tx.addMemo(SorobanClient.Memo.text(memo));
+  }
 
   const preparedTransaction = await server.prepareTransaction(
-    tx,
+    tx.build(),
     networkPassphrase,
   );
 
