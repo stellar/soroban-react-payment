@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import {
   Card,
   Caption,
@@ -9,9 +10,12 @@ import {
 } from "@stellar/design-system";
 import freighterApi from "@stellar/freighter-api";
 
-import { connectNetwork, Networks, NetworkDetails } from "helpers/network";
-import { createPortal } from "react-dom";
-import { ERRORS } from "helpers/error";
+import {
+  connectNetwork,
+  Networks,
+  NetworkDetails,
+} from "../../helpers/network";
+import { ERRORS } from "../../helpers/error";
 import {
   getTxBuilder,
   BASE_FEE,
@@ -21,7 +25,7 @@ import {
   getTokenBalance,
   getServer,
   submitTx,
-} from "helpers/soroban";
+} from "../../helpers/soroban";
 
 import { SendAmount } from "./send-amount";
 import { ConnectWallet } from "./connect-wallet";
@@ -41,7 +45,7 @@ interface SendPaymentProps {
 }
 
 export const SendPayment = (props: SendPaymentProps) => {
-  const showHeader = props.showHeader || true;
+  const showHeader = props.showHeader === undefined ? true : props.showHeader;
   const [activeNetworkDetails, setActiveNetworkDetails] = React.useState(
     {} as NetworkDetails,
   );
