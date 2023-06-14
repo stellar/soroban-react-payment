@@ -1,4 +1,4 @@
-import freighterApi from "@stellar/freighter-api";
+import { StellarWalletsKit } from "stellar-wallets-kit";
 
 export interface NetworkDetails {
   network: string;
@@ -10,32 +10,14 @@ export enum Networks {
   Futurenet = "FUTURENET",
 }
 
-export const connectNetwork = async () => {
-  try {
-    const networkDetails = await freighterApi.getNetworkDetails();
-    const pubKey = await freighterApi.getPublicKey();
-
-    return {
-      networkDetails,
-      pubKey,
-    };
-  } catch (error) {
-    console.log(error);
-    return {
-      networkDetails: {} as NetworkDetails,
-      pubKey: "",
-    };
-  }
-};
-
 export const signTx = async (
   xdr: string,
-  options: {
-    network?: string;
-    accountToSign?: string;
-    networkPassphrase?: string;
-  },
+  publicKey: string,
+  kit: StellarWalletsKit,
 ) => {
-  const signedTx = await freighterApi.signTransaction(xdr, options);
-  return signedTx;
+  const { signedXDR } = await kit.sign({
+    xdr,
+    publicKey,
+  });
+  return signedXDR;
 };

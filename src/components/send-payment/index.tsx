@@ -9,12 +9,14 @@ import {
   Loader,
 } from "@stellar/design-system";
 import freighterApi from "@stellar/freighter-api";
-
 import {
-  connectNetwork,
-  Networks,
-  NetworkDetails,
-} from "../../helpers/network";
+  StellarWalletsKit,
+  WalletNetwork,
+  WalletType,
+  ISupportedWallet,
+} from "stellar-wallets-kit";
+
+import { Networks, NetworkDetails } from "../../helpers/network";
 import { ERRORS } from "../../helpers/error";
 import {
   getTxBuilder,
@@ -46,6 +48,12 @@ interface SendPaymentProps {
 
 export const SendPayment = (props: SendPaymentProps) => {
   const showHeader = props.showHeader === undefined ? true : props.showHeader;
+
+  const kit = new StellarWalletsKit({
+    network: WalletNetwork.FUTURENET,
+    selectedWallet: WalletType.FREIGHTER,
+  });
+
   const [activeNetworkDetails, setActiveNetworkDetails] = React.useState(
     {} as NetworkDetails,
   );
@@ -180,6 +188,8 @@ export const SendPayment = (props: SendPaymentProps) => {
             fee={fee}
             memo={memo}
             networkDetails={activeNetworkDetails}
+            kit={kit}
+            setError={setConnectionError}
           />
         );
       }
@@ -256,21 +266,22 @@ export const SendPayment = (props: SendPaymentProps) => {
     setConnectionError(null);
     setActivePubKey(null);
 
-    const isConnected = await freighterApi.isConnected();
+    await kit.openModal({
+      onWalletSelected: async (option: ISupportedWallet) => {
+        kit.setWallet(option.type);
+        const publicKey = await kit.getPublicKey();
+        const networkDetails = await freighterApi.getNetworkDetails();
 
-    if (!isConnected) {
-      setConnectionError(ERRORS.FREIGHTER_NOT_AVAILABLE);
-      return;
-    }
+        if (networkDetails.network !== Networks.Futurenet) {
+          setConnectionError(ERRORS.UNSUPPORTED_NETWORK);
+        }
 
-    const { networkDetails, pubKey } = await connectNetwork();
+        await kit.setNetwork(WalletNetwork.FUTURENET);
 
-    if (networkDetails.network !== Networks.Futurenet) {
-      setConnectionError(ERRORS.UNSUPPORTED_NETWORK);
-    }
-
-    setActiveNetworkDetails(networkDetails);
-    setActivePubKey(pubKey);
+        setActiveNetworkDetails(networkDetails);
+        setActivePubKey(publicKey);
+      },
+    });
   }
 
   return (
