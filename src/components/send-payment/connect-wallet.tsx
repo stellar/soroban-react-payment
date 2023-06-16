@@ -2,16 +2,12 @@ import React from "react";
 import { Button, Heading } from "@stellar/design-system";
 
 interface ConnectWalletProps {
-  network: string | null;
-  connectionError: string | null;
+  pubKey: string | null;
   onClick: () => void;
 }
 
 export const ConnectWallet = (props: ConnectWalletProps) => {
-  const text =
-    props.network && props.connectionError === null
-      ? "Next"
-      : "Connect Freighter";
+  const text = props.pubKey ? "Next" : "Connect Freighter";
   return (
     <>
       <Heading as="h1" size="sm">

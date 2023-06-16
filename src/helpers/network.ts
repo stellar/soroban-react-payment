@@ -6,9 +6,11 @@ export interface NetworkDetails {
   networkPassphrase: string;
 }
 
-export enum Networks {
-  Futurenet = "FUTURENET",
-}
+export const FUTURENET_DETAILS = {
+  network: "FUTURENET",
+  networkUrl: "https://horizon-futurenet.stellar.org",
+  networkPassphrase: "Test SDF Future Network ; October 2022",
+};
 
 export const signTx = async (
   xdr: string,

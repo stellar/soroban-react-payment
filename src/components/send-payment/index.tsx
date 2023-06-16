@@ -8,7 +8,6 @@ import {
   Profile,
   Loader,
 } from "@stellar/design-system";
-import freighterApi from "@stellar/freighter-api";
 import {
   StellarWalletsKit,
   WalletNetwork,
@@ -16,7 +15,7 @@ import {
   ISupportedWallet,
 } from "stellar-wallets-kit";
 
-import { Networks, NetworkDetails } from "../../helpers/network";
+import { FUTURENET_DETAILS } from "../../helpers/network";
 import { ERRORS } from "../../helpers/error";
 import {
   getTxBuilder,
@@ -40,7 +39,7 @@ import { TxResult } from "./tx-result";
 
 import "./index.scss";
 
-type StepCount = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+type StepCount = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 interface SendPaymentProps {
   showHeader?: boolean;
@@ -54,9 +53,6 @@ export const SendPayment = (props: SendPaymentProps) => {
     selectedWallet: WalletType.FREIGHTER,
   });
 
-  const [activeNetworkDetails, setActiveNetworkDetails] = React.useState(
-    {} as NetworkDetails,
-  );
   const [activePubKey, setActivePubKey] = React.useState(null as string | null);
   const [stepCount, setStepCount] = React.useState(1 as StepCount);
   const [connectionError, setConnectionError] = React.useState(
@@ -82,14 +78,14 @@ export const SendPayment = (props: SendPaymentProps) => {
     setTokenDetails(true);
     setTokenId(id);
 
-    const server = getServer(activeNetworkDetails);
+    const server = getServer(FUTURENET_DETAILS);
 
     try {
       const txBuilderSymbol = await getTxBuilder(
         activePubKey!,
         BASE_FEE,
         server,
-        activeNetworkDetails.networkPassphrase,
+        FUTURENET_DETAILS.networkPassphrase,
       );
 
       const symbol = await getTokenSymbol(id, txBuilderSymbol, server);
@@ -99,7 +95,7 @@ export const SendPayment = (props: SendPaymentProps) => {
         activePubKey!,
         BASE_FEE,
         server,
-        activeNetworkDetails.networkPassphrase,
+        FUTURENET_DETAILS.networkPassphrase,
       );
       const balance = await getTokenBalance(
         activePubKey!,
@@ -113,7 +109,7 @@ export const SendPayment = (props: SendPaymentProps) => {
         activePubKey!,
         BASE_FEE,
         server,
-        activeNetworkDetails.networkPassphrase,
+        FUTURENET_DETAILS.networkPassphrase,
       );
       const decimals = await getTokenDecimals(id, txBuilderDecimals, server);
       setTokenDecimals(decimals);
@@ -137,12 +133,13 @@ export const SendPayment = (props: SendPaymentProps) => {
       }
       case 7: {
         const submit = async () => {
+          setConnectionError(null);
           setIsSubmitting(true);
           try {
-            const server = getServer(activeNetworkDetails);
+            const server = getServer(FUTURENET_DETAILS);
             const result = await submitTx(
               signedXdr,
-              activeNetworkDetails.networkPassphrase,
+              FUTURENET_DETAILS.networkPassphrase,
               server,
             );
 
@@ -158,7 +155,7 @@ export const SendPayment = (props: SendPaymentProps) => {
         };
         return (
           <SubmitPayment
-            network={activeNetworkDetails.network}
+            network={FUTURENET_DETAILS.network}
             destination={paymentDestination}
             amount={sendAmount}
             tokenSymbol={tokenSymbol}
@@ -172,6 +169,7 @@ export const SendPayment = (props: SendPaymentProps) => {
       }
       case 6: {
         const setSignedTx = (xdr: string) => {
+          setConnectionError(null);
           setSignedXdr(xdr);
           setStepCount((stepCount + 1) as StepCount);
         };
@@ -182,12 +180,12 @@ export const SendPayment = (props: SendPaymentProps) => {
             pubKey={activePubKey!}
             tokenSymbol={tokenSymbol}
             onTxSign={setSignedTx}
-            network={activeNetworkDetails.network}
+            network={FUTURENET_DETAILS.network}
             destination={paymentDestination}
             amount={sendAmount}
             fee={fee}
             memo={memo}
-            networkDetails={activeNetworkDetails}
+            networkDetails={FUTURENET_DETAILS}
             kit={kit}
             setError={setConnectionError}
           />
@@ -247,41 +245,36 @@ export const SendPayment = (props: SendPaymentProps) => {
       }
       case 1:
       default: {
-        const onClick =
-          activeNetworkDetails.network && connectionError === null
-            ? () => setStepCount((stepCount + 1) as StepCount)
-            : setConnection;
-        return (
-          <ConnectWallet
-            network={activeNetworkDetails.network}
-            connectionError={connectionError}
-            onClick={onClick}
-          />
-        );
+        const onClick = async () => {
+          setConnectionError(null);
+
+          if (!activePubKey) {
+            await kit.openModal({
+              allowedWallets: [
+                WalletType.ALBEDO,
+                WalletType.FREIGHTER,
+                WalletType.XBULL,
+              ],
+              onWalletSelected: async (option: ISupportedWallet) => {
+                try {
+                  kit.setWallet(option.type);
+                  const publicKey = await kit.getPublicKey();
+
+                  await kit.setNetwork(WalletNetwork.FUTURENET);
+                  setActivePubKey(publicKey);
+                } catch (error) {
+                  console.log(error);
+                  setConnectionError(ERRORS.WALLET_CONNECTION_REJECTED);
+                }
+              },
+            });
+          } else {
+            setStepCount((stepCount + 1) as StepCount);
+          }
+        };
+        return <ConnectWallet pubKey={activePubKey} onClick={onClick} />;
       }
     }
-  }
-
-  async function setConnection() {
-    setConnectionError(null);
-    setActivePubKey(null);
-
-    await kit.openModal({
-      onWalletSelected: async (option: ISupportedWallet) => {
-        kit.setWallet(option.type);
-        const publicKey = await kit.getPublicKey();
-        const networkDetails = await freighterApi.getNetworkDetails();
-
-        if (networkDetails.network !== Networks.Futurenet) {
-          setConnectionError(ERRORS.UNSUPPORTED_NETWORK);
-        }
-
-        await kit.setNetwork(WalletNetwork.FUTURENET);
-
-        setActiveNetworkDetails(networkDetails);
-        setActivePubKey(publicKey);
-      },
-    });
   }
 
   return (
