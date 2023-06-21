@@ -42,11 +42,11 @@ import "./index.scss";
 type StepCount = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 interface SendPaymentProps {
-  showHeader?: boolean;
+  hasHeader?: boolean;
 }
 
 export const SendPayment = (props: SendPaymentProps) => {
-  const showHeader = props.showHeader === undefined ? true : props.showHeader;
+  const hasHeader = props.hasHeader === undefined ? true : props.hasHeader;
 
   const [selectedNetwork] = React.useState(FUTURENET_DETAILS);
   const [activePubKey, setActivePubKey] = React.useState(null as string | null);
@@ -292,7 +292,7 @@ export const SendPayment = (props: SendPaymentProps) => {
 
   return (
     <>
-      {showHeader && (
+      {hasHeader && (
         <Layout.Header hasThemeSwitch projectId="soroban-react-payment" />
       )}
       <div className="Layout__inset account-badge-row">
