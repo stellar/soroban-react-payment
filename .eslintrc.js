@@ -14,6 +14,7 @@ module.exports = {
     },
   ],
   rules: {
+    "react-hooks/exhaustive-deps": "error",
     "no-shadow": "off",
     "@typescript-eslint/no-shadow": ["error"],
     "no-unused-vars": "off",

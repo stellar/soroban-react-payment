@@ -1,5 +1,6 @@
 import React from "react";
 import { Button, Heading, Profile } from "@stellar/design-system";
+import { StellarWalletsKit } from "stellar-wallets-kit";
 import { NetworkDetails, signTx } from "../../helpers/network";
 import {
   makePayment,
@@ -7,12 +8,14 @@ import {
   parseTokenAmount,
   getServer,
 } from "../../helpers/soroban";
+import { ERRORS } from "../../helpers/error";
 
 interface ConfirmPaymentProps {
   amount: string;
   destination: string;
   fee: string;
   pubKey: string;
+  kit: StellarWalletsKit;
   memo: string;
   network: string;
   onTxSign: (xdr: string) => void;
@@ -20,6 +23,7 @@ interface ConfirmPaymentProps {
   tokenDecimals: number;
   tokenSymbol: string;
   networkDetails: NetworkDetails;
+  setError: (error: string) => void;
 }
 
 export const ConfirmPayment = (props: ConfirmPaymentProps) => {
@@ -42,13 +46,13 @@ export const ConfirmPayment = (props: ConfirmPaymentProps) => {
       server,
       props.networkDetails.networkPassphrase,
     );
-    const options = {
-      network: props.networkDetails.network,
-      networkPassphrase: props.networkDetails.networkPassphrase,
-      accountToSign: props.pubKey,
-    };
-    const signedTx = await signTx(xdr, options);
-    props.onTxSign(signedTx);
+    try {
+      const signedTx = await signTx(xdr, props.pubKey, props.kit);
+      props.onTxSign(signedTx);
+    } catch (error) {
+      console.log(error);
+      props.setError(ERRORS.UNABLE_TO_SIGN_TX);
+    }
   };
   return (
     <>
