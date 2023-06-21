@@ -48,11 +48,7 @@ interface SendPaymentProps {
 export const SendPayment = (props: SendPaymentProps) => {
   const showHeader = props.showHeader === undefined ? true : props.showHeader;
 
-  const kit = new StellarWalletsKit({
-    network: WalletNetwork.FUTURENET,
-    selectedWallet: WalletType.FREIGHTER,
-  });
-
+  const [selectedNetwork] = React.useState(FUTURENET_DETAILS);
   const [activePubKey, setActivePubKey] = React.useState(null as string | null);
   const [stepCount, setStepCount] = React.useState(1 as StepCount);
   const [connectionError, setConnectionError] = React.useState(
@@ -74,18 +70,29 @@ export const SendPayment = (props: SendPaymentProps) => {
   const [isLoadingTokenDetails, setTokenDetails] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  const [SWKKit] = React.useState(
+    new StellarWalletsKit({
+      network: selectedNetwork.networkPassphrase as WalletNetwork,
+      selectedWallet: WalletType.FREIGHTER,
+    }),
+  );
+
+  React.useEffect(() => {
+    SWKKit.setNetwork(selectedNetwork.networkPassphrase as WalletNetwork);
+  }, [selectedNetwork.networkPassphrase, SWKKit]);
+
   async function setToken(id: string) {
     setTokenDetails(true);
     setTokenId(id);
 
-    const server = getServer(FUTURENET_DETAILS);
+    const server = getServer(selectedNetwork);
 
     try {
       const txBuilderSymbol = await getTxBuilder(
         activePubKey!,
         BASE_FEE,
         server,
-        FUTURENET_DETAILS.networkPassphrase,
+        selectedNetwork.networkPassphrase,
       );
 
       const symbol = await getTokenSymbol(id, txBuilderSymbol, server);
@@ -95,7 +102,7 @@ export const SendPayment = (props: SendPaymentProps) => {
         activePubKey!,
         BASE_FEE,
         server,
-        FUTURENET_DETAILS.networkPassphrase,
+        selectedNetwork.networkPassphrase,
       );
       const balance = await getTokenBalance(
         activePubKey!,
@@ -109,7 +116,7 @@ export const SendPayment = (props: SendPaymentProps) => {
         activePubKey!,
         BASE_FEE,
         server,
-        FUTURENET_DETAILS.networkPassphrase,
+        selectedNetwork.networkPassphrase,
       );
       const decimals = await getTokenDecimals(id, txBuilderDecimals, server);
       setTokenDecimals(decimals);
@@ -136,10 +143,10 @@ export const SendPayment = (props: SendPaymentProps) => {
           setConnectionError(null);
           setIsSubmitting(true);
           try {
-            const server = getServer(FUTURENET_DETAILS);
+            const server = getServer(selectedNetwork);
             const result = await submitTx(
               signedXdr,
-              FUTURENET_DETAILS.networkPassphrase,
+              selectedNetwork.networkPassphrase,
               server,
             );
 
@@ -155,7 +162,7 @@ export const SendPayment = (props: SendPaymentProps) => {
         };
         return (
           <SubmitPayment
-            network={FUTURENET_DETAILS.network}
+            network={selectedNetwork.network}
             destination={paymentDestination}
             amount={sendAmount}
             tokenSymbol={tokenSymbol}
@@ -180,13 +187,13 @@ export const SendPayment = (props: SendPaymentProps) => {
             pubKey={activePubKey!}
             tokenSymbol={tokenSymbol}
             onTxSign={setSignedTx}
-            network={FUTURENET_DETAILS.network}
+            network={selectedNetwork.network}
             destination={paymentDestination}
             amount={sendAmount}
             fee={fee}
             memo={memo}
-            networkDetails={FUTURENET_DETAILS}
-            kit={kit}
+            networkDetails={selectedNetwork}
+            kit={SWKKit}
             setError={setConnectionError}
           />
         );
@@ -249,7 +256,7 @@ export const SendPayment = (props: SendPaymentProps) => {
           setConnectionError(null);
 
           if (!activePubKey) {
-            await kit.openModal({
+            await SWKKit.openModal({
               allowedWallets: [
                 WalletType.ALBEDO,
                 WalletType.FREIGHTER,
@@ -257,10 +264,10 @@ export const SendPayment = (props: SendPaymentProps) => {
               ],
               onWalletSelected: async (option: ISupportedWallet) => {
                 try {
-                  kit.setWallet(option.type);
-                  const publicKey = await kit.getPublicKey();
+                  SWKKit.setWallet(option.type);
+                  const publicKey = await SWKKit.getPublicKey();
 
-                  await kit.setNetwork(WalletNetwork.FUTURENET);
+                  await SWKKit.setNetwork(WalletNetwork.FUTURENET);
                   setActivePubKey(publicKey);
                 } catch (error) {
                   console.log(error);
@@ -272,7 +279,13 @@ export const SendPayment = (props: SendPaymentProps) => {
             setStepCount((stepCount + 1) as StepCount);
           }
         };
-        return <ConnectWallet pubKey={activePubKey} onClick={onClick} />;
+        return (
+          <ConnectWallet
+            selectedNetwork={selectedNetwork.network}
+            pubKey={activePubKey}
+            onClick={onClick}
+          />
+        );
       }
     }
   }

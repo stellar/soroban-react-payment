@@ -1,7 +1,8 @@
 import React from "react";
-import { Button, Heading } from "@stellar/design-system";
+import { Button, Heading, Select } from "@stellar/design-system";
 
 interface ConnectWalletProps {
+  selectedNetwork: string;
   pubKey: string | null;
   onClick: () => void;
 }
@@ -13,6 +14,15 @@ export const ConnectWallet = (props: ConnectWalletProps) => {
       <Heading as="h1" size="sm">
         Send a Soroban Payment
       </Heading>
+      <Select
+        disabled
+        fieldSize="md"
+        id="selected-network"
+        label="Select your Network"
+        value={props.selectedNetwork}
+      >
+        <option>{props.selectedNetwork}</option>
+      </Select>
       <div className="submit-row">
         <Button
           size="md"
