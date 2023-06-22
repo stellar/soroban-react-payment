@@ -28,8 +28,12 @@ interface ConfirmPaymentProps {
 
 export const ConfirmPayment = (props: ConfirmPaymentProps) => {
   const signWithFreighter = async () => {
+    // Need to use the perviously fetched token decimals to properly display the amount value
     const amount = parseTokenAmount(props.amount, props.tokenDecimals);
+    // Get an instance of a Soroban RPC set to the selected network
     const server = getServer(props.networkDetails);
+
+    // Gets a transaction builder and uses it to add a "transfer" operation and build the corresponding XDR
     const builder = await getTxBuilder(
       props.pubKey,
       props.fee,
@@ -47,6 +51,7 @@ export const ConfirmPayment = (props: ConfirmPaymentProps) => {
       props.networkDetails.networkPassphrase,
     );
     try {
+      // Signs XDR representing the "transfer" transaction
       const signedTx = await signTx(xdr, props.pubKey, props.kit);
       props.onTxSign(signedTx);
     } catch (error) {

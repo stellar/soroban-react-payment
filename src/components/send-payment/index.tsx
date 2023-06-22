@@ -46,9 +46,13 @@ interface SendPaymentProps {
 }
 
 export const SendPayment = (props: SendPaymentProps) => {
+  // This is only needed when this component is consumed by other components that display a different header
   const hasHeader = props.hasHeader === undefined ? true : props.hasHeader;
 
+  // Default to Futurenet network, only supported network for now
   const [selectedNetwork] = React.useState(FUTURENET_DETAILS);
+
+  // Initial state, empty states for token/transaction details
   const [activePubKey, setActivePubKey] = React.useState(null as string | null);
   const [stepCount, setStepCount] = React.useState(1 as StepCount);
   const [connectionError, setConnectionError] = React.useState(
@@ -67,9 +71,10 @@ export const SendPayment = (props: SendPaymentProps) => {
   const [signedXdr, setSignedXdr] = React.useState("");
 
   // 2 basic loading states for now
-  const [isLoadingTokenDetails, setTokenDetails] = React.useState(false);
+  const [isLoadingTokenDetails, setLoadingTokenDetails] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  // Setup swc, user will set the desired wallet on connect
   const [SWKKit] = React.useState(
     new StellarWalletsKit({
       network: selectedNetwork.networkPassphrase as WalletNetwork,
@@ -77,17 +82,24 @@ export const SendPayment = (props: SendPaymentProps) => {
     }),
   );
 
+  // Whenever the selected network changes, set the network on swc
   React.useEffect(() => {
     SWKKit.setNetwork(selectedNetwork.networkPassphrase as WalletNetwork);
   }, [selectedNetwork.networkPassphrase, SWKKit]);
 
+  // with a user provided token ID, fetch token details
   async function setToken(id: string) {
-    setTokenDetails(true);
+    setLoadingTokenDetails(true);
     setTokenId(id);
 
+    // get an instance of a Soroban RPC server for the selected network
     const server = getServer(selectedNetwork);
 
     try {
+      // Right now, Soroban only supports operation per transaction
+      // so we need to get a transaction builder for every operation we want to call.
+      // In the future, we will be able to use more than 1 operation in a single transaction.
+
       const txBuilderSymbol = await getTxBuilder(
         activePubKey!,
         BASE_FEE,
@@ -95,6 +107,8 @@ export const SendPayment = (props: SendPaymentProps) => {
         selectedNetwork.networkPassphrase,
       );
 
+      // Get the symbol for the set token ID
+      // https://github.com/stellar/soroban-examples/blob/main/token/src/contract.rs#L47
       const symbol = await getTokenSymbol(id, txBuilderSymbol, server);
       setTokenSymbol(symbol);
 
@@ -104,6 +118,9 @@ export const SendPayment = (props: SendPaymentProps) => {
         server,
         selectedNetwork.networkPassphrase,
       );
+
+      // Get the current token balance for the selected token
+      // https://github.com/stellar/soroban-examples/blob/main/token/src/contract.rs#L21
       const balance = await getTokenBalance(
         activePubKey!,
         id,
@@ -118,20 +135,25 @@ export const SendPayment = (props: SendPaymentProps) => {
         server,
         selectedNetwork.networkPassphrase,
       );
+
+      // Get the number of decimals set for the selected token, so that we can properly display
+      // a formatted value.
+      // https://github.com/stellar/soroban-examples/blob/main/token/src/contract.rs#L43
       const decimals = await getTokenDecimals(id, txBuilderDecimals, server);
       setTokenDecimals(decimals);
-      setTokenDetails(false);
+      setLoadingTokenDetails(false);
 
       return true;
     } catch (error) {
       console.log(error);
       setConnectionError("Unable to fetch token details.");
-      setTokenDetails(false);
+      setLoadingTokenDetails(false);
 
       return false;
     }
   }
 
+  // This uses the StepCount tro render to currently active step in the payment flow
   function renderStep(step: StepCount) {
     switch (step) {
       case 8: {
@@ -139,6 +161,7 @@ export const SendPayment = (props: SendPaymentProps) => {
         return <TxResult onClick={onClick} resultXDR={txResultXDR} />;
       }
       case 7: {
+        // Uses state saved from previous steps in order to submit a transaction to the network
         const submit = async () => {
           setConnectionError(null);
           setIsSubmitting(true);
@@ -256,6 +279,7 @@ export const SendPayment = (props: SendPaymentProps) => {
           setConnectionError(null);
 
           if (!activePubKey) {
+            // See https://github.com/Creit-Tech/Stellar-Wallets-Kit/tree/main for more options
             await SWKKit.openModal({
               allowedWallets: [
                 WalletType.ALBEDO,
@@ -264,6 +288,7 @@ export const SendPayment = (props: SendPaymentProps) => {
               ],
               onWalletSelected: async (option: ISupportedWallet) => {
                 try {
+                  // Set selected wallet,  network, and public key
                   SWKKit.setWallet(option.type);
                   const publicKey = await SWKKit.getPublicKey();
 
