@@ -3,39 +3,48 @@
 The Payment DApp is an easy to use application designed to mirror the Soroban
 payment flow currently found in Freighter.
 
+You can explore this dapp at https://scaffold-soroban.stellar.org/ by choosing
+payment from the "select demo" dropdown.
+
 ## Prerequisites
 
 The Payment DApp relies on the following dependencies:
 
-- Node (>=16.14.0 <17.0.0): https://nodejs.org/en/download/
+- Node (>=16.14.0 <=18.0.0): https://nodejs.org/en/download/
 
 - Yarn (v1.22.5 or newer): https://classic.yarnpkg.com/en/docs/install
 
-- Freighter wallet: https://www.freighter.app/
+- Freighter wallet(v5.0 or newer): https://www.freighter.app/
 
 ## Features
 
 The Payment DApp offers the following features:
 
 1. **Freighter Wallet Integration**: The Payment DApp seamlessly integrates with
-   Freighter, allowing users to connect their Freighter wallet to access Soroban
-   token balances and utilize the signing capabilities of Freighter for secure
-   and integrity-checked transactions.
+   Freighter/Albedo/XBull, allowing users to connect their wallet to access
+   Soroban token balances and utilize their signing capabilities for secure and
+   integrity-checked transactions.
 
 2. **Transaction Construction**: Leveraging the Soroban token's contract
-   interface, the DApp constructs transactions that invoke the `transfer`
-   method. This method facilitates the transfer of Soroban tokens from one
-   address to another.
+   interface, the DApp constructs transactions that invoke the `transfer` method
+   of the
+   [token interface](https://github.com/stellar/soroban-examples/blob/main/token/src/contract.rs#L27).
+   This method facilitates the transfer of Soroban tokens from one address to
+   another.
 
 ## Getting Started
 
 To use the Payment DApp, follow these steps:
 
-1. Install and set up the [Freighter wallet](https://www.freighter.app/).
+1. Install and set up one of the supported wallets.
+
+- [Freighter wallet](https://www.freighter.app/)
+- [Albedo wallet](https://albedo.link/install-extension)
+- [XBull wallet](https://xbull.app/)
 
 2. Clone and navigate into the
    [Payment DApp repository](https://github.com/stellar/soroban-react-payment/tree/main)
-   by trunning the following:
+   by running the following:
 
    ```
    git clone https://github.com/stellar/soroban-react-payment.git
@@ -48,8 +57,8 @@ To use the Payment DApp, follow these steps:
    yarn
    ```
 
-4. Connect your Freighter wallet to the DApp and ensure that experimental mode
-   is enabled. You can find this setting in Freighter wallet at:
+4. If you are using the Freighter wallet, ensure that experimental mode is
+   enabled. You can find this setting in Freighter wallet at:
    _`Settings(⚙️)>Preferences>ENABLE EXPERIMENTAL MODE`_.
 
 <img src = "./public/img/freighter_settings.png" width="50%" height="50%"/>
