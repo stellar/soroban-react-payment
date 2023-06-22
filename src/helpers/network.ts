@@ -6,6 +6,7 @@ export interface NetworkDetails {
   networkPassphrase: string;
 }
 
+// Soroban is only supported on Futurenet right now
 export const FUTURENET_DETAILS = {
   network: "FUTURENET",
   networkUrl: "https://horizon-futurenet.stellar.org",
