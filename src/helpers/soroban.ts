@@ -294,7 +294,7 @@ export const getTokenName = async (
     .setTimeout(SorobanClient.TimeoutInfinite)
     .build();
 
-  const result = await simulateTx(tx, decoders.bytesN, server);
+  const result = await simulateTx<string>(tx, decoders.bytesN, server);
   return result;
 };
 
@@ -328,7 +328,7 @@ export const getTokenBalance = async (
     .setTimeout(SorobanClient.TimeoutInfinite)
     .build();
 
-  const result = await simulateTx(tx, decoders.i128, server);
+  const result = await simulateTx<string>(tx, decoders.i128, server);
   return result;
 };
 
@@ -368,4 +368,51 @@ export const makePayment = async (
   );
 
   return preparedTransaction.toXDR();
+};
+
+export const getEstimatedFee = async (
+  tokenId: string,
+  amount: number,
+  to: string,
+  pubKey: string,
+  memo: string,
+  txBuilder: SorobanClient.TransactionBuilder,
+  server: SorobanClient.Server,
+) => {
+  const contract = new SorobanClient.Contract(tokenId);
+  const tx = txBuilder
+    .addOperation(
+      contract.call(
+        "transfer",
+        ...[
+          accountToScVal(pubKey), // from
+          accountToScVal(to), // to
+          numberToI128(amount), // amount
+        ],
+      ),
+    )
+    .setTimeout(SorobanClient.TimeoutInfinite);
+
+  if (memo.length > 0) {
+    tx.addMemo(SorobanClient.Memo.text(memo));
+  }
+
+  const raw = tx.build();
+
+  const simResponse = await server.simulateTransaction(raw);
+  if (simResponse.error) {
+    throw simResponse.error;
+  }
+
+  if (!simResponse.results || simResponse.results.length < 1) {
+    throw new Error("transaction simulation failed");
+  }
+
+  // 'classic' tx fees are measured as the product of tx.fee * 'number of operations', In soroban contract tx,
+  // there can only be single operation in the tx, so can make simplification
+  // of total classic fees for the soroban transaction will be equal to incoming tx.fee + minResourceFee.
+  const classicFeeNum = parseInt(raw.fee, 10) || 0;
+  const minResourceFeeNum = parseInt(simResponse.minResourceFee, 10) || 0;
+  const fee = (classicFeeNum + minResourceFeeNum).toString();
+  return fee;
 };
