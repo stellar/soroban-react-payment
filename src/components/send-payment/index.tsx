@@ -1,5 +1,6 @@
 import React from "react";
 import { createPortal } from "react-dom";
+import BigNumber from "bignumber.js";
 import {
   Card,
   Caption,
@@ -18,6 +19,7 @@ import {
 import { FUTURENET_DETAILS } from "../../helpers/network";
 import { ERRORS } from "../../helpers/error";
 import {
+  getEstimatedFee,
   getTxBuilder,
   BASE_FEE,
   XLM_DECIMALS,
@@ -70,9 +72,10 @@ export const SendPayment = (props: SendPaymentProps) => {
   const [txResultXDR, settxResultXDR] = React.useState("");
   const [signedXdr, setSignedXdr] = React.useState("");
 
-  // 2 basic loading states for now
+  // 3 basic loading states for now
   const [isLoadingTokenDetails, setLoadingTokenDetails] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isGettingFee, setIsGettingFee] = React.useState(false);
 
   // Setup swc, user will set the desired wallet on connect
   const [SWKKit] = React.useState(
@@ -152,6 +155,36 @@ export const SendPayment = (props: SendPaymentProps) => {
       return false;
     }
   }
+
+  const getFee = async () => {
+    setIsGettingFee(true);
+    const server = getServer(selectedNetwork);
+
+    try {
+      const builder = await getTxBuilder(
+        activePubKey!,
+        fee,
+        server,
+        selectedNetwork.networkPassphrase,
+      );
+
+      const estimatedFee = await getEstimatedFee(
+        tokenId,
+        new BigNumber(sendAmount).toNumber(),
+        paymentDestination,
+        activePubKey!,
+        memo,
+        builder,
+        server,
+      );
+      setFee(estimatedFee);
+      setIsGettingFee(false);
+    } catch (error) {
+      // defaults to hardcoded base fee if this fails
+      console.log(error);
+      setIsGettingFee(false);
+    }
+  };
 
   // This uses the StepCount tro render to currently active step in the payment flow
   function renderStep(step: StepCount) {
@@ -234,7 +267,20 @@ export const SendPayment = (props: SendPaymentProps) => {
         );
       }
       case 4: {
-        const onClick = () => setStepCount((stepCount + 1) as StepCount);
+        const onClick = async () => {
+          // set estimated fee for next step
+          await getFee();
+          setStepCount((stepCount + 1) as StepCount);
+        };
+
+        if (isGettingFee) {
+          return (
+            <div className="loading">
+              <Loader />
+            </div>
+          );
+        }
+
         return (
           <SendAmount
             amount={sendAmount}
