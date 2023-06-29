@@ -1,6 +1,7 @@
 import React from "react";
 import { Button, Heading, Profile } from "@stellar/design-system";
 import { StellarWalletsKit } from "stellar-wallets-kit";
+import { xlmToStroop } from "helpers/format";
 import { NetworkDetails, signTx } from "../../helpers/network";
 import {
   makePayment,
@@ -36,7 +37,7 @@ export const ConfirmPayment = (props: ConfirmPaymentProps) => {
     // Gets a transaction builder and uses it to add a "transfer" operation and build the corresponding XDR
     const builder = await getTxBuilder(
       props.pubKey,
-      props.fee,
+      xlmToStroop(props.fee).toString(),
       server,
       props.networkDetails.networkPassphrase,
     );
