@@ -16,7 +16,7 @@ import {
   ISupportedWallet,
 } from "stellar-wallets-kit";
 
-import { stroopToXlm } from "helpers/format";
+import { stroopToXlm } from "../../helpers/format";
 import { FUTURENET_DETAILS } from "../../helpers/network";
 import { ERRORS } from "../../helpers/error";
 import {
