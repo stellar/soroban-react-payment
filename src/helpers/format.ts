@@ -1,8 +1,8 @@
 import BigNumber from "bignumber.js";
 
 // used for display purposes
-export const truncateString = (str: string) =>
-  str ? `${str.slice(0, 5)}…${str.slice(-5)}` : "";
+export const truncateString = (str: string, len = 5) =>
+  str ? `${str.slice(0, len)}…${str.slice(-Math.abs(len))}` : "";
 
 // conversion used to display the base fee
 export const stroopToXlm = (

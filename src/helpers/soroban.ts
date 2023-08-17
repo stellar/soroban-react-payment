@@ -19,7 +19,6 @@ import { NetworkDetails } from "./network";
 import { stroopToXlm } from "./format";
 import { ERRORS } from "./error";
 
-// TODO: once soroban supports estimated fees, we can fetch this
 export const BASE_FEE = "100";
 export const baseFeeXlm = stroopToXlm(BASE_FEE).toString();
 
@@ -114,21 +113,12 @@ export const simulateTx = async <ArgType>(
   tx: Transaction<Memo<MemoType>, Operation[]>,
   server: Server,
 ): Promise<ArgType> => {
-  const { results, ...rest } = await server.simulateTransaction(tx);
-  console.log(results, rest);
+  const { results } = await server.simulateTransaction(tx);
   if (!results || results.length !== 1) {
     throw new Error("Invalid response from simulateTransaction");
   }
   const result = results[0];
   const scVal = xdr.ScVal.fromXDR(result.xdr, "base64");
-  let convertedScVal: any;
-  try {
-    // handle a case where scValToNative doesn't properly handle scvString
-    convertedScVal = scVal.str().toString();
-    return convertedScVal;
-  } catch (e) {
-    console.error(e);
-  }
   return scValToNative(scVal);
 };
 
