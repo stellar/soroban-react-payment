@@ -32,14 +32,6 @@ export const SendTxStatus: {
   Error: "ERROR",
 };
 
-export const GetTxStatus: {
-  [index: string]: SorobanRpc.GetTransactionStatus;
-} = {
-  Success: "SUCCESS",
-  NotFound: "NOT_FOUND",
-  Failed: "FAILED",
-};
-
 export const XLM_DECIMALS = 7;
 
 export const RPC_URLS: { [key: string]: string } = {
@@ -114,22 +106,12 @@ export const simulateTx = async <ArgType>(
   tx: Transaction<Memo<MemoType>, Operation[]>,
   server: Server,
 ): Promise<ArgType> => {
-  const { results, ...rest } = await server.simulateTransaction(tx);
-  console.log(results, rest);
-  if (!results || results.length !== 1) {
-    throw new Error("Invalid response from simulateTransaction");
+  const response = await server.simulateTransaction(tx);
+
+  if ("result" in response && response.result !== undefined) {
+    return scValToNative(response.result.retval);
   }
-  const result = results[0];
-  const scVal = xdr.ScVal.fromXDR(result.xdr, "base64");
-  let convertedScVal: any;
-  try {
-    // handle a case where scValToNative doesn't properly handle scvString
-    convertedScVal = scVal.str().toString();
-    return convertedScVal;
-  } catch (e) {
-    console.error(e);
-  }
-  return scValToNative(scVal);
+  throw new Error("cannot simulate transaction");
 };
 
 // Build and submits a transaction to the Soroban RPC
@@ -151,7 +133,7 @@ export const submitTx = async (
     let txResponse = await server.getTransaction(sendResponse.hash);
 
     // Poll this until the status is not "NOT_FOUND"
-    while (txResponse.status === GetTxStatus.NotFound) {
+    while (txResponse.status === SorobanRpc.GetTransactionStatus.NOT_FOUND) {
       // See if the transaction is complete
       // eslint-disable-next-line no-await-in-loop
       txResponse = await server.getTransaction(sendResponse.hash);
@@ -160,13 +142,14 @@ export const submitTx = async (
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    return txResponse.resultXdr!;
+    if (txResponse.status === SorobanRpc.GetTransactionStatus.SUCCESS) {
+      return txResponse.resultXdr.toXDR("base64");
+    }
     // eslint-disable-next-line no-else-return
-  } else {
-    throw new Error(
-      `Unabled to submit transaction, status: ${sendResponse.status}`,
-    );
   }
+  throw new Error(
+    `Unabled to submit transaction, status: ${sendResponse.status}`,
+  );
 };
 
 // Get the tokens symbol, decoded as a string
@@ -303,11 +286,11 @@ export const getEstimatedFee = async (
   const raw = tx.build();
 
   const simResponse = await server.simulateTransaction(raw);
-  if (simResponse.error) {
+  if ("error" in simResponse) {
     throw simResponse.error;
   }
 
-  if (!simResponse.results || simResponse.results.length < 1) {
+  if (!("result" in simResponse)) {
     throw new Error("transaction simulation failed");
   }
 
