@@ -34,7 +34,7 @@ export const SendTxStatus: {
 export const XLM_DECIMALS = 7;
 
 export const RPC_URLS: { [key: string]: string } = {
-  FUTURENET: "https://rpc-futurenet.stellar.org/",
+  TESTNET: "https://soroban-testnet.stellar.org/",
 };
 
 // Can be used whenever you need an Address argument for a contract method
@@ -113,6 +113,7 @@ export const simulateTx = async <ArgType>(
   ) {
     return scValToNative(response.result.retval);
   }
+
   throw new Error("cannot simulate transaction");
 };
 
