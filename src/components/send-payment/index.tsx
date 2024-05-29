@@ -17,7 +17,7 @@ import {
 } from "stellar-wallets-kit";
 
 import { stroopToXlm } from "../../helpers/format";
-import { FUTURENET_DETAILS } from "../../helpers/network";
+import { TESTNET_DETAILS } from "../../helpers/network";
 import { ERRORS } from "../../helpers/error";
 import {
   getEstimatedFee,
@@ -52,8 +52,8 @@ export const SendPayment = (props: SendPaymentProps) => {
   // This is only needed when this component is consumed by other components that display a different header
   const hasHeader = props.hasHeader === undefined ? true : props.hasHeader;
 
-  // Default to Futurenet network, only supported network for now
-  const [selectedNetwork] = React.useState(FUTURENET_DETAILS);
+  // Default to Testnet network, only supported network for now
+  const [selectedNetwork] = React.useState(TESTNET_DETAILS);
 
   // Initial state, empty states for token/transaction details
   const [activePubKey, setActivePubKey] = React.useState(null as string | null);
@@ -339,7 +339,7 @@ export const SendPayment = (props: SendPaymentProps) => {
                   SWKKit.setWallet(option.type);
                   const publicKey = await SWKKit.getPublicKey();
 
-                  await SWKKit.setNetwork(WalletNetwork.FUTURENET);
+                  await SWKKit.setNetwork(WalletNetwork.TESTNET);
                   setActivePubKey(publicKey);
                 } catch (error) {
                   console.log(error);
