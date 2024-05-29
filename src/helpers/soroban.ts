@@ -257,13 +257,6 @@ export const getEstimatedFee = async (
     throw simResponse.error;
   }
 
-  if (
-    SorobanRpc.Api.isSimulationSuccess(simResponse) &&
-    simResponse.result !== undefined
-  ) {
-    throw new Error("transaction simulation failed");
-  }
-
   // 'classic' tx fees are measured as the product of tx.fee * 'number of operations', In soroban contract tx,
   // there can only be single operation in the tx, so can make simplification
   // of total classic fees for the soroban transaction will be equal to incoming tx.fee + minResourceFee.
