@@ -1,14 +1,10 @@
 import React from "react";
+import { Soroban } from "@stellar/stellar-sdk";
 import { Button, Heading, Profile } from "@stellar/design-system";
-import { StellarWalletsKit } from "stellar-wallets-kit";
+import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit";
 import { xlmToStroop } from "../../helpers/format";
 import { NetworkDetails, signTx } from "../../helpers/network";
-import {
-  makePayment,
-  getTxBuilder,
-  parseTokenAmount,
-  getServer,
-} from "../../helpers/soroban";
+import { makePayment, getTxBuilder, getServer } from "../../helpers/soroban";
 import { ERRORS } from "../../helpers/error";
 
 interface ConfirmPaymentProps {
@@ -30,7 +26,7 @@ interface ConfirmPaymentProps {
 export const ConfirmPayment = (props: ConfirmPaymentProps) => {
   const signWithFreighter = async () => {
     // Need to use the perviously fetched token decimals to properly display the amount value
-    const amount = parseTokenAmount(props.amount, props.tokenDecimals);
+    const amount = Soroban.parseTokenAmount(props.amount, props.tokenDecimals);
     // Get an instance of a Soroban RPC set to the selected network
     const server = getServer(props.networkDetails);
 
@@ -43,7 +39,7 @@ export const ConfirmPayment = (props: ConfirmPaymentProps) => {
     );
     const xdr = await makePayment(
       props.tokenId,
-      amount.toNumber(),
+      Number(amount),
       props.destination,
       props.pubKey,
       props.memo,

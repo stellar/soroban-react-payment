@@ -12,12 +12,13 @@ import {
 import {
   StellarWalletsKit,
   WalletNetwork,
-  WalletType,
+  FREIGHTER_ID,
   ISupportedWallet,
-} from "stellar-wallets-kit";
+  allowAllModules,
+} from "@creit.tech/stellar-wallets-kit";
 
 import { stroopToXlm } from "../../helpers/format";
-import { FUTURENET_DETAILS } from "../../helpers/network";
+import { TESTNET_DETAILS } from "../../helpers/network";
 import { ERRORS } from "../../helpers/error";
 import {
   getEstimatedFee,
@@ -52,8 +53,8 @@ export const SendPayment = (props: SendPaymentProps) => {
   // This is only needed when this component is consumed by other components that display a different header
   const hasHeader = props.hasHeader === undefined ? true : props.hasHeader;
 
-  // Default to Futurenet network, only supported network for now
-  const [selectedNetwork] = React.useState(FUTURENET_DETAILS);
+  // Default to Testnet network, only supported network for now
+  const [selectedNetwork] = React.useState(TESTNET_DETAILS);
 
   // Initial state, empty states for token/transaction details
   const [activePubKey, setActivePubKey] = React.useState(null as string | null);
@@ -82,14 +83,10 @@ export const SendPayment = (props: SendPaymentProps) => {
   const [SWKKit] = React.useState(
     new StellarWalletsKit({
       network: selectedNetwork.networkPassphrase as WalletNetwork,
-      selectedWallet: WalletType.FREIGHTER,
+      selectedWalletId: FREIGHTER_ID,
+      modules: allowAllModules(),
     }),
   );
-
-  // Whenever the selected network changes, set the network on swc
-  React.useEffect(() => {
-    SWKKit.setNetwork(selectedNetwork.networkPassphrase as WalletNetwork);
-  }, [selectedNetwork.networkPassphrase, SWKKit]);
 
   // with a user provided token ID, fetch token details
   async function setToken(id: string) {
@@ -328,19 +325,12 @@ export const SendPayment = (props: SendPaymentProps) => {
           if (!activePubKey) {
             // See https://github.com/Creit-Tech/Stellar-Wallets-Kit/tree/main for more options
             await SWKKit.openModal({
-              allowedWallets: [
-                WalletType.ALBEDO,
-                WalletType.FREIGHTER,
-                WalletType.XBULL,
-              ],
               onWalletSelected: async (option: ISupportedWallet) => {
                 try {
                   // Set selected wallet,  network, and public key
-                  SWKKit.setWallet(option.type);
-                  const publicKey = await SWKKit.getPublicKey();
-
-                  await SWKKit.setNetwork(WalletNetwork.FUTURENET);
-                  setActivePubKey(publicKey);
+                  SWKKit.setWallet(option.id);
+                  const { address } = await SWKKit.getAddress();
+                  setActivePubKey(address);
                 } catch (error) {
                   console.log(error);
                   setConnectionError(ERRORS.WALLET_CONNECTION_REJECTED);
