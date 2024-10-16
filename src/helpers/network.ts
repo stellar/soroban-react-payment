@@ -1,4 +1,4 @@
-import { StellarWalletsKit } from "stellar-wallets-kit";
+import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit";
 
 export interface NetworkDetails {
   network: string;
@@ -17,9 +17,8 @@ export const signTx = async (
   publicKey: string,
   kit: StellarWalletsKit,
 ) => {
-  const { signedXDR } = await kit.sign({
-    xdr,
-    publicKey,
+  const { signedTxXdr } = await kit.signTransaction(xdr, {
+    address: publicKey,
   });
-  return signedXDR;
+  return signedTxXdr;
 };

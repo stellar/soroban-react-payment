@@ -1,7 +1,7 @@
 import React from "react";
 import { Soroban } from "@stellar/stellar-sdk";
 import { Button, Heading, Profile } from "@stellar/design-system";
-import { StellarWalletsKit } from "stellar-wallets-kit";
+import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit";
 import { xlmToStroop } from "../../helpers/format";
 import { NetworkDetails, signTx } from "../../helpers/network";
 import { makePayment, getTxBuilder, getServer } from "../../helpers/soroban";
